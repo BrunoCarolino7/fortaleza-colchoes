@@ -1,0 +1,83 @@
+"use client"
+
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Trash2Icon } from "@/components/icons"
+import type { Endereco } from "@/lib/data/clientes"
+
+interface EnderecoFormProps {
+  endereco: Endereco
+  onChange: (endereco: Endereco) => void
+  onRemove?: () => void
+  title?: string
+  showRemove?: boolean
+}
+
+export function EnderecoForm({
+  endereco,
+  onChange,
+  onRemove,
+  title = "Endereço",
+  showRemove = true,
+}: EnderecoFormProps) {
+  const handleChange = (field: keyof Endereco, value: string) => {
+    onChange({ ...endereco, [field]: value })
+  }
+
+  return (
+    <Card>
+      <CardHeader className="flex flex-row items-center justify-between">
+        <CardTitle className="text-base">{title}</CardTitle>
+        {showRemove && onRemove && (
+          <Button type="button" variant="ghost" size="icon" onClick={onRemove}>
+            <Trash2Icon className="h-4 w-4" />
+          </Button>
+        )}
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div className="grid gap-4 md:grid-cols-2">
+          <div className="space-y-2 md:col-span-2">
+            <Label>Logradouro</Label>
+            <Input value={endereco.logradouro} onChange={(e) => handleChange("logradouro", e.target.value)} required />
+          </div>
+          <div className="space-y-2">
+            <Label>Bairro</Label>
+            <Input value={endereco.bairro} onChange={(e) => handleChange("bairro", e.target.value)} required />
+          </div>
+          <div className="space-y-2">
+            <Label>Jardim</Label>
+            <Input value={endereco.jardim} onChange={(e) => handleChange("jardim", e.target.value)} required />
+          </div>
+          <div className="space-y-2">
+            <Label>CEP</Label>
+            <Input value={endereco.cep} onChange={(e) => handleChange("cep", e.target.value)} required />
+          </div>
+          <div className="space-y-2">
+            <Label>Localização</Label>
+            <Input
+              value={endereco.localizacao}
+              onChange={(e) => handleChange("localizacao", e.target.value)}
+              placeholder="Ex: Apto 101, Bloco A"
+              required
+            />
+          </div>
+          <div className="space-y-2">
+            <Label>Cidade</Label>
+            <Input value={endereco.cidade} onChange={(e) => handleChange("cidade", e.target.value)} required />
+          </div>
+          <div className="space-y-2">
+            <Label>Estado</Label>
+            <Input
+              value={endereco.estado}
+              onChange={(e) => handleChange("estado", e.target.value)}
+              maxLength={2}
+              required
+            />
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  )
+}

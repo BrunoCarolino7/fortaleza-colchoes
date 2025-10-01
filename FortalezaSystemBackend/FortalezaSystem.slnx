@@ -1,0 +1,6 @@
+<Solution>
+  <Project Path="FortalezaSystem.Api/FortalezaSystem.Api.csproj" />
+  <Project Path="FortalezaSystem.Application/FortalezaSystem.Application.csproj" />
+  <Project Path="FortalezaSystem.Domain/FortalezaSystem.Domain.csproj" />
+  <Project Path="FortalezaSystem.Infrastructure/FortalezaSystem.Infrastructure.csproj" />
+</Solution>
