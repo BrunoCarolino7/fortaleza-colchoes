@@ -1,5 +1,4 @@
-﻿using FortalezaSystem.Domain.Dtos;
-using MediatR;
+﻿using MediatR;
 
 namespace FortalezaSystem.Application.UseCases.Cliente.Queries.GetClienteById;
 

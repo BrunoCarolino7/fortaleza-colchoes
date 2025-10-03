@@ -1,9 +1,10 @@
-﻿using FortalezaSystem.Application.UseCases.Cliente.Commands.CreateCliente;
+﻿using FortalezaSystem.Application.UseCases.Auth;
+using FortalezaSystem.Application.UseCases.Cliente.Commands.CreateCliente;
 using FortalezaSystem.Application.UseCases.Cliente.Commands.DeleteCliente;
 using FortalezaSystem.Application.UseCases.Cliente.Commands.UpdateCliente;
 using FortalezaSystem.Application.UseCases.Cliente.Queries.GetAllClientes;
 using FortalezaSystem.Application.UseCases.Cliente.Queries.GetClienteById;
-using FortalezaSystem.Domain.Dtos;
+using FortalezaSystem.Application.UseCases.Cliente.Queries.GetNumberCustomers;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 
@@ -11,17 +12,32 @@ namespace FortalezaSystem.Api.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-public class ClienteController(IMediator mediator) : ControllerBase
+public class ClienteController(IMediator mediator, AuthenticateUserUseCase authUseCase) : ControllerBase
 {
     private readonly IMediator _mediator = mediator;
+    private readonly AuthenticateUserUseCase _authUseCase = authUseCase;
 
     // 🔹 GET: api/cliente
     [HttpGet]
     public async Task<ActionResult<IEnumerable<ClienteDto>>> GetAll(CancellationToken cancellationToken)
     {
         var result = await _mediator.Send(new GetAllClientesQuery(), cancellationToken);
-        return Ok(result);
+
+        return !result.Any()
+            ? (ActionResult<IEnumerable<ClienteDto>>)NotFound("Nenhum cliente encontrado.")
+            : (ActionResult<IEnumerable<ClienteDto>>)Ok(result);
     }
+
+    [HttpGet("count")]
+    public async Task<ActionResult<IEnumerable<ClienteDto>>> GetNumberCustomers(CancellationToken cancellationToken)
+    {
+        var result = await _mediator.Send(new GetNumberCustomersQuery(), cancellationToken);
+
+        return result == 0
+            ? (ActionResult<IEnumerable<ClienteDto>>)NotFound("Nenhum cliente encontrado.")
+            : (ActionResult<IEnumerable<ClienteDto>>)Ok(result);
+    }
+
 
     // 🔹 GET: api/cliente/{id}
     [HttpGet("{id:int}")]
@@ -30,6 +46,13 @@ public class ClienteController(IMediator mediator) : ControllerBase
         var result = await _mediator.Send(new GetClienteByIdQuery(id), cancellationToken);
         if (result == null) return NotFound();
         return Ok(result);
+    }
+
+    [HttpPost("login")]
+    public async Task<IActionResult> Login([FromBody] LoginRequest request)
+    {
+        var token = await _authUseCase.Execute(request.User, request.Password);
+        return Ok(new { Token = token, Status = 200 });
     }
 
     // 🔹 POST: api/cliente

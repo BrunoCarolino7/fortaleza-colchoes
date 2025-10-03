@@ -6,7 +6,7 @@ public class Clientes : AggregateRoot
 {
     public string Nome { get; set; }
     public string Filiacao { get; set; }
-    public DateTime DataNascimento { get; set; }
+    public DateOnly DataNascimento { get; set; }
     public string EstadoCivil { get; set; }
     public string Nacionalidade { get; set; }
     public string Naturalidade { get; set; }
@@ -21,4 +21,5 @@ public class Clientes : AggregateRoot
     public Conjuge? Conjuge { get; set; }
     public InformacoesPagamento? Pagamento { get; set; }
     public Assinatura? Assinatura { get; set; }
+    public FortalezaUser? FortalezaUser { get; set; }
 }

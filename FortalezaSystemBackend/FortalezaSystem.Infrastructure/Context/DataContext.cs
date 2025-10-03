@@ -1,6 +1,7 @@
 ﻿using FortalezaSystem.Domain.Entities;
 using FortalezaSystem.Domain.Enuns;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace FortalezaSystem.Infrastructure.Context;
 
@@ -15,14 +16,15 @@ public class DataContext(DbContextOptions<DataContext> options) : DbContext(opti
     public DbSet<InformacoesPagamento> InformacoesPagamento { get; set; }
     public DbSet<Parcela> Parcelas { get; set; }
     public DbSet<Assinatura> Assinaturas { get; set; }
+    public DbSet<FortalezaUser> FortalezaUser { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-
         base.OnModelCreating(modelBuilder);
 
         modelBuilder.HasDefaultSchema("fortaleza");
 
+        // Configuração global para decimal
         foreach (var property in modelBuilder.Model.GetEntityTypes()
                      .SelectMany(t => t.GetProperties())
                      .Where(p => p.ClrType == typeof(decimal)))
@@ -31,55 +33,81 @@ public class DataContext(DbContextOptions<DataContext> options) : DbContext(opti
             property.SetScale(2);
         }
 
+        // Conversão global para DateOnly -> date
+        var dateOnlyConverter = new ValueConverter<DateOnly, DateTime>(
+            d => d.ToDateTime(TimeOnly.MinValue),
+            d => DateOnly.FromDateTime(d)
+        );
+
+        foreach (var entityType in modelBuilder.Model.GetEntityTypes())
+        {
+            var properties = entityType.ClrType.GetProperties()
+                .Where(p => p.PropertyType == typeof(DateOnly));
+
+            foreach (var property in properties)
+            {
+                modelBuilder
+                    .Entity(entityType.Name)
+                    .Property(property.Name)
+                    .HasConversion(dateOnlyConverter)
+                    .HasColumnType("date");
+            }
+        }
+
         // Cliente
         modelBuilder.Entity<Clientes>(builder =>
-            {
-                builder.ToTable("Clientes");
-                builder.HasKey(c => c.Id);
+        {
+            builder.ToTable("Clientes");
+            builder.HasKey(c => c.Id);
 
-                builder.Property(c => c.Nome).HasMaxLength(150).IsRequired();
-                builder.Property(c => c.Filiacao).HasMaxLength(150);
-                builder.Property(c => c.Nacionalidade).HasMaxLength(50);
-                builder.Property(c => c.Naturalidade).HasMaxLength(50);
-                builder.Property(c => c.EstadoCivil).HasMaxLength(30);
+            builder.Property(c => c.Nome).HasMaxLength(150).IsRequired();
+            builder.Property(c => c.Filiacao).HasMaxLength(150);
+            builder.Property(c => c.Nacionalidade).HasMaxLength(50);
+            builder.Property(c => c.Naturalidade).HasMaxLength(50);
+            builder.Property(c => c.EstadoCivil).HasMaxLength(30);
 
-                builder.HasMany(c => c.Enderecos)
-                       .WithOne(e => e.Cliente)
-                       .HasForeignKey(e => e.ClienteId)
-                       .IsRequired(false)
-                       .OnDelete(DeleteBehavior.Cascade);
+            builder.HasMany(c => c.Enderecos)
+                   .WithOne(e => e.Cliente)
+                   .HasForeignKey(e => e.ClienteId)
+                   .IsRequired(false)
+                   .OnDelete(DeleteBehavior.Cascade);
 
-                builder.HasMany(c => c.Referencias)
-                       .WithOne(r => r.Cliente)
-                       .HasForeignKey(r => r.ClienteId)
-                       .OnDelete(DeleteBehavior.Cascade);
+            builder.HasMany(c => c.Referencias)
+                   .WithOne(r => r.Cliente)
+                   .HasForeignKey(r => r.ClienteId)
+                   .OnDelete(DeleteBehavior.Cascade);
 
-                builder.HasOne(c => c.Documento)
-                       .WithOne(d => d.Cliente)
-                       .HasForeignKey<Documento>(d => d.ClienteId)
-                       .IsRequired(false)
-                       .OnDelete(DeleteBehavior.Cascade);
+            builder.HasOne(c => c.Documento)
+                   .WithOne(d => d.Cliente)
+                   .HasForeignKey<Documento>(d => d.ClienteId)
+                   .IsRequired(false)
+                   .OnDelete(DeleteBehavior.Cascade);
 
-                builder.HasOne(c => c.DadosProfissionais)
-                       .WithOne(dp => dp.Cliente)
-                       .HasForeignKey<DadosProfissionais>(dp => dp.ClienteId)
-                       .OnDelete(DeleteBehavior.Cascade);
+            builder.HasOne(c => c.DadosProfissionais)
+                   .WithOne(dp => dp.Cliente)
+                   .HasForeignKey<DadosProfissionais>(dp => dp.ClienteId)
+                   .OnDelete(DeleteBehavior.Cascade);
 
-                builder.HasOne(c => c.Conjuge)
-                       .WithOne(co => co.Cliente)
-                       .HasForeignKey<Conjuge>(co => co.ClienteId)
-                       .OnDelete(DeleteBehavior.Cascade);
+            builder.HasOne(c => c.Conjuge)
+                   .WithOne(co => co.Cliente)
+                   .HasForeignKey<Conjuge>(co => co.ClienteId)
+                   .OnDelete(DeleteBehavior.Cascade);
 
-                builder.HasOne(c => c.Pagamento)
-                       .WithOne(p => p.Cliente)
-                       .HasForeignKey<InformacoesPagamento>(p => p.ClienteId)
-                       .OnDelete(DeleteBehavior.Cascade);
+            builder.HasOne(c => c.Pagamento)
+                   .WithOne(p => p.Cliente)
+                   .HasForeignKey<InformacoesPagamento>(p => p.ClienteId)
+                   .OnDelete(DeleteBehavior.Cascade);
 
-                builder.HasOne(c => c.Assinatura)
-                       .WithOne(a => a.Cliente)
-                       .HasForeignKey<Assinatura>(a => a.ClienteId)
-                       .OnDelete(DeleteBehavior.Cascade);
-            });
+            builder.HasOne(c => c.Assinatura)
+                   .WithOne(a => a.Cliente)
+                   .HasForeignKey<Assinatura>(a => a.ClienteId)
+                   .OnDelete(DeleteBehavior.Cascade);
+
+            builder.HasOne(c => c.FortalezaUser)
+                 .WithOne(a => a.Cliente)
+                 .HasForeignKey<FortalezaUser>(a => a.ClienteId)
+                 .OnDelete(DeleteBehavior.Cascade);
+        });
 
         // Endereco
         modelBuilder.Entity<Endereco>(builder =>
@@ -95,7 +123,15 @@ public class DataContext(DbContextOptions<DataContext> options) : DbContext(opti
             builder.Property(e => e.Cidade).HasMaxLength(100);
             builder.Property(e => e.Estado).HasMaxLength(2);
             builder.Property(e => e.ClienteId).IsRequired(false);
+        });
 
+        modelBuilder.Entity<FortalezaUser>(builder =>
+        {
+            builder.ToTable("FortalezaUser");
+            builder.HasKey(d => d.Id);
+
+            builder.Property(d => d.Usuario).HasMaxLength(20).IsRequired();
+            builder.Property(d => d.SenhaHash).HasMaxLength(50).IsRequired();
         });
 
         // Documento

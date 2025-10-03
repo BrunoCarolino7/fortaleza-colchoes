@@ -9,7 +9,7 @@ public record CreateClienteCommand(
     string Nacionalidade,
     string Naturalidade,
     string EstadoCivil,
-    DateTime DataNascimento,
+    DateOnly DataNascimento,
     string CPF,
     string RG,
 
@@ -52,7 +52,7 @@ public record DadosProfissionaisDto(
 
 public record ConjugeDto(
     string Nome,
-    DateTime? DataNascimento,
+    DateOnly? DataNascimento,
     string Naturalidade,
     string LocalDeTrabalho,
     string CPF,

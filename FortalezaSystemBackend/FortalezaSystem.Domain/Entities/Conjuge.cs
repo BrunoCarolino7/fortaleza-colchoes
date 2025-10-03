@@ -3,7 +3,7 @@
 public class Conjuge : BaseEntity
 {
     public string Nome { get; set; }
-    public DateTime? DataNascimento { get; set; }
+    public DateOnly? DataNascimento { get; set; }
     public string Naturalidade { get; set; }
     public string LocalDeTrabalho { get; set; }
 
