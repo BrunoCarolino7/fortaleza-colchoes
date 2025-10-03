@@ -177,7 +177,7 @@ export function ClienteFormStepper({ cliente, onSubmit, isSubmitting = false }: 
       parcelas.push({
         numero: i,
         valor: Number(valorParcela.toFixed(2)),
-        vencimento: dataVencimento.toISOString().split("T")[0],
+        vencimento: dataVencimento.toString(),
         statusPagamento: 0,
       })
     }
@@ -711,7 +711,7 @@ export function ClienteFormStepper({ cliente, onSubmit, isSubmitting = false }: 
                                 <Label>Vencimento</Label>
                                 <Input
                                   type="date"
-                                  value={parcela.vencimento}
+                                  value={parcela.vencimento ? parcela.vencimento : ""}
                                   onChange={(e) =>
                                     updateParcela(index, {
                                       ...parcela,

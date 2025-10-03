@@ -37,7 +37,7 @@ export interface Referencia {
 export interface Parcela {
   numero: number
   valor: number
-  vencimento: string
+  vencimento: string | null
   statusPagamento: number // 0 = pendente, 1 = pago
 }
 

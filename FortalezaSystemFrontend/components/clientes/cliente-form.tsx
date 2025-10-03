@@ -717,7 +717,7 @@ export function ClienteForm({ cliente, onSubmit, isSubmitting = false }: Cliente
                                   <Label>Vencimento</Label>
                                   <Input
                                     type="date"
-                                    value={parcela.vencimento}
+                                    value={parcela.vencimento ?? ""}
                                     onChange={(e) =>
                                       updateParcela(index, {
                                         ...parcela,

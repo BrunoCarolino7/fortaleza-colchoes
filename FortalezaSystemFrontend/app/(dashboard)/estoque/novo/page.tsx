@@ -14,9 +14,9 @@ export default function NovoProdutoPage() {
   }
 
   return (
-    <div>
+    <div className="flex flex-col h-full">
       <Header title="Novo Produto" />
-      <div className="p-6">
+      <div className="flex-1 overflow-auto p-4 sm:p-6">
         <ProdutoForm onSubmit={handleSubmit} />
       </div>
     </div>
