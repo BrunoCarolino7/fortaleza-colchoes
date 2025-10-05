@@ -1,9 +1,8 @@
-﻿using FortalezaSystem.Application.UseCases.Cliente.Commands.UpdateCliente;
-using FortalezaSystem.Infrastructure.Context;
+﻿using FortalezaSystem.Infrastructure.Context;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 
-namespace FortalezaSystem.Application.Clientes.Commands.UpdateCliente;
+namespace FortalezaSystem.Application.UseCases.Cliente.Commands.UpdateCliente;
 
 public class UpdateClienteHandler(DataContext context) : IRequestHandler<UpdateClienteCommand, bool>
 {
@@ -17,9 +16,7 @@ public class UpdateClienteHandler(DataContext context) : IRequestHandler<UpdateC
 
         if (cliente == null) return false;
 
-        cliente.Nome = request.Nome;
-        cliente.Documento.CPF = request.CPF;
-        cliente.Documento.RG = request.RG;
+        cliente.AtualizarDados(request.Nome, request.CPF, request.RG);
 
         await _context.SaveChangesAsync(cancellationToken);
         return true;

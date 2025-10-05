@@ -2,9 +2,18 @@
 
 public class Referencia : BaseEntity
 {
+    private Referencia()
+    {
+
+    }
+    public Referencia(string nome, Endereco? endereco)
+    {
+        Nome = nome;
+        Endereco = endereco;
+    }
+
     public string Nome { get; set; }
 
-    // FK
     public int ClienteId { get; set; }
     public Clientes Cliente { get; set; }
 

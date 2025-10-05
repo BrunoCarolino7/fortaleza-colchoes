@@ -1,8 +1,22 @@
-﻿using FortalezaSystem.Domain.Entities;
-using FortalezaSystem.Domain.Enuns;
+﻿using FortalezaSystem.Domain.Enuns;
+
+namespace FortalezaSystem.Domain.Entities;
 
 public class InformacoesPagamento : BaseEntity
 {
+    private InformacoesPagamento()
+    {
+
+    }
+    public InformacoesPagamento(decimal valorTotal, decimal sinal, DateTime dataInicio, int numeroParcelas, ICollection<Parcela>? parcelas)
+    {
+        ValorTotal = valorTotal;
+        Sinal = sinal;
+        DataInicio = dataInicio;
+        NumeroParcelas = numeroParcelas;
+        Parcelas = parcelas ?? [];
+    }
+
     public decimal ValorTotal { get; set; }
     public decimal Sinal { get; set; }
     public DateTime DataInicio { get; set; }

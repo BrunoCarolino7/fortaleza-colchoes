@@ -1,12 +1,11 @@
 ﻿using FortalezaSystem.Domain.Entities;
 using FortalezaSystem.Infrastructure.Context;
 using MediatR;
-
 using ClientesEntity = FortalezaSystem.Domain.Entities.Clientes;
 
 namespace FortalezaSystem.Application.UseCases.Cliente.Commands.CreateCliente;
 
-public class CreateClienteHandler : IRequestHandler<CreateClienteCommand, int>
+public class CreateClienteHandler : IRequestHandler<CreateClienteCommand, ClientesEntity>
 {
     private readonly DataContext _context;
 
@@ -15,108 +14,98 @@ public class CreateClienteHandler : IRequestHandler<CreateClienteCommand, int>
         _context = context;
     }
 
-    public async Task<int> Handle(CreateClienteCommand request, CancellationToken cancellationToken)
+    public async Task<ClientesEntity> Handle(CreateClienteCommand request, CancellationToken cancellationToken)
     {
-        var cliente = new ClientesEntity
-        {
-            Nome = request.Nome,
-            Filiacao = request.Filiacao,
-            Nacionalidade = request.Nacionalidade,
-            Naturalidade = request.Naturalidade,
-            EstadoCivil = request.EstadoCivil,
-            DataNascimento = request.DataNascimento,
+        var documento = new Documento(request.CPF, request.RG);
 
-            Documento = new Documento
-            {
-                CPF = request.CPF,
-                RG = request.RG
-            },
+        var enderecos = request.Enderecos?.Select(e =>
+            new Endereco(
+                e.Logradouro,
+                e.Bairro,
+                e.Jardim,
+                e.Localizacao,
+                e.Cidade,
+                e.Estado,
+                e.CEP
+            )
+        ).ToList();
 
-            Enderecos = request.Enderecos.Select(e => new Endereco
-            {
-                Logradouro = e.Logradouro,
-                Bairro = e.Bairro,
-                Jardim = e.Jardim,
-                CEP = e.CEP,
-                Localizacao = e.Localizacao,
-                Cidade = e.Cidade,
-                Estado = e.Estado
-            }).ToList(),
+        var dadosProfissionais = request.DadosProfissionais is null
+            ? null
+            : new DadosProfissionais(
+                request.DadosProfissionais.Empresa,
+                request.DadosProfissionais.EmpregoAnterior,
+                request.DadosProfissionais.Telefone,
+                request.DadosProfissionais.Salario,
+                new Endereco(
+                    request.DadosProfissionais.EnderecoEmpresa.Logradouro,
+                    request.DadosProfissionais.EnderecoEmpresa.Bairro,
+                    request.DadosProfissionais.EnderecoEmpresa.Jardim,
+                    request.DadosProfissionais.EnderecoEmpresa.Localizacao,
+                    request.DadosProfissionais.EnderecoEmpresa.Cidade,
+                    request.DadosProfissionais.EnderecoEmpresa.Estado,
+                    request.DadosProfissionais.EnderecoEmpresa.CEP
+                )
+            );
 
-            DadosProfissionais = request.DadosProfissionais == null ? null : new DadosProfissionais
-            {
-                Empresa = request.DadosProfissionais.Empresa,
-                EmpregoAnterior = request.DadosProfissionais.EmpregoAnterior,
-                Telefone = request.DadosProfissionais.Telefone,
-                Salario = request.DadosProfissionais.Salario,
-                EnderecoEmpresa = new Endereco
-                {
-                    Logradouro = request.DadosProfissionais.EnderecoEmpresa.Logradouro,
-                    Bairro = request.DadosProfissionais.EnderecoEmpresa.Bairro,
-                    Jardim = request.DadosProfissionais.EnderecoEmpresa.Jardim,
-                    CEP = request.DadosProfissionais.EnderecoEmpresa.CEP,
-                    Localizacao = request.DadosProfissionais.EnderecoEmpresa.Localizacao,
-                    Cidade = request.DadosProfissionais.EnderecoEmpresa.Cidade,
-                    Estado = request.DadosProfissionais.EnderecoEmpresa.Estado
-                }
-            },
+        var conjuge = request.Conjuge is null
+            ? null
+            : new Conjuge(
+                request.Conjuge.Nome,
+                request.Conjuge.DataNascimento,
+                request.Conjuge.Naturalidade,
+                request.Conjuge.LocalDeTrabalho,
+                new Documento(request.Conjuge.CPF, request.Conjuge.RG)
+            );
 
-            Conjuge = request.Conjuge == null ? null : new Conjuge
-            {
-                Nome = request.Conjuge.Nome,
-                DataNascimento = request.Conjuge.DataNascimento,
-                Naturalidade = request.Conjuge.Naturalidade,
-                LocalDeTrabalho = request.Conjuge.LocalDeTrabalho,
-                Documento = new Documento
-                {
-                    CPF = request.Conjuge.CPF,
-                    RG = request.Conjuge.RG
-                }
-            },
+        var referencias = request.Referencias?.Select(r =>
+            new Referencia(
+                r.Nome,
+                new Endereco(
+                    r.Endereco.Logradouro,
+                    r.Endereco.Bairro,
+                    r.Endereco.Jardim,
+                    r.Endereco.Localizacao,
+                    r.Endereco.Cidade,
+                    r.Endereco.Estado,
+                    r.Endereco.CEP
+                )
+            )
+        ).ToList();
 
-            Referencias = request.Referencias.Select(r => new Referencia
-            {
-                Nome = r.Nome,
-                Endereco = new Endereco
-                {
-                    Logradouro = r.Endereco.Logradouro,
-                    Bairro = r.Endereco.Bairro,
-                    Jardim = r.Endereco.Jardim,
-                    CEP = r.Endereco.CEP,
-                    Localizacao = r.Endereco.Localizacao,
-                    Cidade = r.Endereco.Cidade,
-                    Estado = r.Endereco.Estado
-                }
-            }).ToList(),
+        var assinatura = new Assinatura(request.Assinatura);
 
-            Assinatura = new Assinatura
-            {
-                AssinaturaCliente = request.Assinatura
-            },
+        var pagamento = request.Pagamento is null
+            ? null
+            : new InformacoesPagamento(
+                request.Pagamento.ValorTotal,
+                request.Pagamento.Sinal,
+                request.Pagamento.DataInicio,
+                request.Pagamento.NumeroParcelas,
+                request.Pagamento.Parcelas?.Select(p =>
+                    new Parcela(p.Numero, p.Valor, p.Vencimento, p.StatusPagamento)
+                ).ToList()
+            );
 
-            Pagamento = request.Pagamento == null ? null : new InformacoesPagamento
-            {
-                ValorTotal = request.Pagamento.ValorTotal,
-                Sinal = request.Pagamento.Sinal,
-                DataInicio = request.Pagamento.DataInicio,
-                NumeroParcelas = request.Pagamento.NumeroParcelas,
-                Parcelas = request.Pagamento.Parcelas.Select(p => new Parcela
-                {
-                    Numero = p.Numero,
-                    Valor = p.Valor,
-                    Vencimento = p.Vencimento,
-                    StatusPagamento = p.StatusPagamento
-                }).ToList()
-            }
-        };
+        var cliente = new ClientesEntity(
+            request.Nome,
+            request.Filiacao,
+            request.DataNascimento,
+            request.EstadoCivil,
+            request.Nacionalidade,
+            request.Naturalidade,
+            documento,
+            dadosProfissionais,
+            conjuge,
+            pagamento,
+            assinatura,
+            enderecos,
+            referencias
+        );
 
-        // Adiciona apenas o cliente
         _context.Clientes.Add(cliente);
-
-        // Salva todo o grafo de uma vez
         await _context.SaveChangesAsync(cancellationToken);
 
-        return cliente.Id;
+        return cliente;
     }
-
 }

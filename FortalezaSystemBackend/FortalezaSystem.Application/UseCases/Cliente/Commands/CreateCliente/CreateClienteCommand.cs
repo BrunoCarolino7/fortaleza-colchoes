@@ -1,5 +1,7 @@
 ﻿using FortalezaSystem.Domain.Enuns;
 using MediatR;
+using ClientesEntity = FortalezaSystem.Domain.Entities.Clientes;
+
 
 namespace FortalezaSystem.Application.UseCases.Cliente.Commands.CreateCliente;
 
@@ -30,7 +32,7 @@ public record CreateClienteCommand(
 
     // Pagamento
     PagamentoDto Pagamento
-) : IRequest<int>;
+) : IRequest<ClientesEntity>;
 
 public record EnderecoDto(
     string Logradouro,

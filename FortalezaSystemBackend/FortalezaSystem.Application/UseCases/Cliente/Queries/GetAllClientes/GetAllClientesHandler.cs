@@ -1,14 +1,30 @@
-﻿using FortalezaSystem.Domain.Repository;
+﻿using FortalezaSystem.Application.UseCases.Cliente.Dtos;
+using FortalezaSystem.Application.UseCases.Cliente.Queries.GetAllClientes;
+using FortalezaSystem.Domain;
+using FortalezaSystem.Domain.Repository;
 using MediatR;
 
-namespace FortalezaSystem.Application.UseCases.Cliente.Queries.GetAllClientes;
-
-public class GetAllClientesHandler(IClienteRepository clienteRepository) : IRequestHandler<GetAllClientesQuery, IEnumerable<ClienteDto>>
+public class GetAllClientesHandler : IRequestHandler<GetAllClientesQuery, PagedResult<ClienteDto>>
 {
-    private readonly IClienteRepository _clienteRepository = clienteRepository;
+    private readonly IClienteRepository _clienteRepository;
 
-    public async Task<IEnumerable<ClienteDto>> Handle(GetAllClientesQuery request, CancellationToken cancellationToken)
+    public GetAllClientesHandler(IClienteRepository clienteRepository)
     {
-        return await _clienteRepository.ObterClientes(cancellationToken);
+        _clienteRepository = clienteRepository;
+    }
+
+    public async Task<PagedResult<ClienteDto>> Handle(GetAllClientesQuery request, CancellationToken cancellationToken)
+    {
+        var pagedClientes = await _clienteRepository.ObterClientes(request.Page, request.PageSize, cancellationToken);
+
+        var dtoList = pagedClientes.Data.Select(ClienteDto.ConvertToDto).ToList();
+
+        return new PagedResult<ClienteDto>
+        {
+            Data = dtoList,
+            TotalItems = pagedClientes.TotalItems,
+            Page = pagedClientes.Page,
+            PageSize = pagedClientes.PageSize
+        };
     }
 }

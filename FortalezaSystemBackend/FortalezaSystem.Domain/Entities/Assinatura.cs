@@ -2,6 +2,15 @@
 
 public class Assinatura : BaseEntity
 {
+    private Assinatura()
+    {
+
+    }
+    public Assinatura(string assinaturaCliente)
+    {
+        AssinaturaCliente = assinaturaCliente;
+    }
+
     public string AssinaturaCliente { get; set; }
 
     // FK

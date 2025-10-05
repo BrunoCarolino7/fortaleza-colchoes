@@ -16,6 +16,7 @@ public class DataContext(DbContextOptions<DataContext> options) : DbContext(opti
     public DbSet<InformacoesPagamento> InformacoesPagamento { get; set; }
     public DbSet<Parcela> Parcelas { get; set; }
     public DbSet<Assinatura> Assinaturas { get; set; }
+    public DbSet<Estoque> Estoque { get; set; }
     public DbSet<FortalezaUser> FortalezaUser { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -231,6 +232,12 @@ public class DataContext(DbContextOptions<DataContext> options) : DbContext(opti
             builder.HasKey(a => a.Id);
 
             builder.Property(a => a.AssinaturaCliente).HasMaxLength(200);
+        });
+
+        modelBuilder.Entity<Estoque>(builder =>
+        {
+            builder.ToTable("Estoque");
+            builder.HasKey(a => a.Id);
         });
     }
 }

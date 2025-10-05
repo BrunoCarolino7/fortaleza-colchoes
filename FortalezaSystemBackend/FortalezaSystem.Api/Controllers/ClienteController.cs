@@ -2,6 +2,7 @@
 using FortalezaSystem.Application.UseCases.Cliente.Commands.CreateCliente;
 using FortalezaSystem.Application.UseCases.Cliente.Commands.DeleteCliente;
 using FortalezaSystem.Application.UseCases.Cliente.Commands.UpdateCliente;
+using FortalezaSystem.Application.UseCases.Cliente.Dtos;
 using FortalezaSystem.Application.UseCases.Cliente.Queries.GetAllClientes;
 using FortalezaSystem.Application.UseCases.Cliente.Queries.GetClienteById;
 using FortalezaSystem.Application.UseCases.Cliente.Queries.GetNumberCustomers;
@@ -19,13 +20,18 @@ public class ClienteController(IMediator mediator, AuthenticateUserUseCase authU
 
     // 🔹 GET: api/cliente
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<ClienteDto>>> GetAll(CancellationToken cancellationToken)
+    public async Task<IActionResult> GetAll(
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 10,
+        CancellationToken cancellationToken = default)
     {
-        var result = await _mediator.Send(new GetAllClientesQuery(), cancellationToken);
+        var query = new GetAllClientesQuery(page, pageSize);
+        var result = await _mediator.Send(query, cancellationToken);
 
-        return !result.Any()
-            ? (ActionResult<IEnumerable<ClienteDto>>)NotFound("Nenhum cliente encontrado.")
-            : (ActionResult<IEnumerable<ClienteDto>>)Ok(result);
+        if (result == null)
+            return NotFound("Nenhum cliente encontrado.");
+
+        return Ok(result);
     }
 
     [HttpGet("count")]
@@ -49,9 +55,9 @@ public class ClienteController(IMediator mediator, AuthenticateUserUseCase authU
     }
 
     [HttpPost("login")]
-    public async Task<IActionResult> Login([FromBody] LoginRequest request)
+    public async Task<IActionResult> Login([FromBody] LoginCommand command)
     {
-        var token = await _authUseCase.Execute(request.User, request.Password);
+        var token = await _authUseCase.Execute(command.User, command.Password);
         return Ok(new { Token = token, Status = 200 });
     }
 

@@ -1,6 +1,7 @@
 <Solution>
   <Project Path="FortalezaSystem.Api/FortalezaSystem.Api.csproj" />
   <Project Path="FortalezaSystem.Application/FortalezaSystem.Application.csproj" />
+  <Project Path="FortalezaSystem.Common/FortalezaSystem.Common.csproj" Id="55960f94-67ff-45a1-8f37-8f7a95af829a" />
   <Project Path="FortalezaSystem.Domain/FortalezaSystem.Domain.csproj" />
   <Project Path="FortalezaSystem.Infrastructure/FortalezaSystem.Infrastructure.csproj" />
 </Solution>
