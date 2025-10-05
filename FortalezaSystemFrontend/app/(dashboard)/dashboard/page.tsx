@@ -3,36 +3,82 @@
 import { Header } from "@/components/header"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { UsersIcon, PackageIcon, DollarSignIcon } from "@/components/icons"
-import axios from "axios"
+import axios, { AxiosError } from "axios"
 import { useEffect, useState } from "react"
 import { Skeleton } from "@/components/ui/skeleton"
 
+enum StatusEstoqueEnum {
+  EM_ESTOQUE = 1,
+  BAIXO_ESTOQUE = 2,
+  SEM_ESTOQUE = 3
+}
+
 export default function DashboardPage() {
   const [totalClientes, setTotalClientes] = useState<number | null>(null)
+  const [totalEstoque, setTotalEstoque] = useState<EstoqueTotalAgregado | null>(null)
+  const [errorClientes, setErrorClientes] = useState<AxiosErrorInfo | null>(null)
+  const [errorEstoque, setErrorEstoque] = useState<AxiosErrorInfo | null>(null)
 
   useEffect(() => {
+
     axios
       .get("https://localhost:7195/api/cliente/count")
       .then((response) => setTotalClientes(response.data))
-      .catch((err) => console.error(err))
+      .catch((err: AxiosError) => {
+        const errorInfo: AxiosErrorInfo = {
+          status: err.response?.status,
+          message: err.message,
+          name: err.name,
+          code: err.code,
+          stack: err.stack,
+        }
+        setErrorClientes(errorInfo)
+      })
+
+    // Requisição de estoque
+    axios
+      .get("https://localhost:7195/api/estoque")
+      .then((response) => setTotalEstoque(response.data))
+      .catch((err: AxiosError) => {
+        const errorInfo: AxiosErrorInfo = {
+          status: err.response?.status,
+          message: err.message,
+          name: err.name,
+          code: err.code,
+          stack: err.stack,
+        }
+        setErrorEstoque(errorInfo)
+      })
   }, [])
 
+  console.log("Clientes", totalClientes)
+  console.log("Estoque", totalEstoque)
 
   const stats = [
     {
       title: "Total de Clientes",
-      value: totalClientes !== null ? (
-        totalClientes.toString()
-      ) : (
-        <Skeleton className="h-6 w-12 rounded" />
-      ),
+      value:
+        errorClientes?.status === 404 || totalClientes === null ? (
+          "0"
+        ) : totalClientes !== null ? (
+          totalClientes.toString()
+        ) : (
+          <Skeleton className="h-6 w-12 rounded" />
+        ),
       icon: UsersIcon,
     },
     {
       title: "Produtos em Estoque",
-      value: "156",
+      value:
+        errorEstoque?.status === 404 || totalEstoque === null ? (
+          "0"
+        ) : totalEstoque.data !== null ? (
+          totalEstoque.total
+        ) : (
+          <Skeleton className="h-6 w-12 rounded" />
+        ),
       icon: PackageIcon,
-      trend: "23 unidades baixas",
+      trend: totalEstoque?.baixoEstoque ? `Baixo estoque: ${totalEstoque.baixoEstoque}` : undefined,
     },
     {
       title: "Vendas do Mês",
@@ -40,7 +86,6 @@ export default function DashboardPage() {
       icon: DollarSignIcon,
     },
   ]
-
 
   return (
     <div className="flex flex-col">

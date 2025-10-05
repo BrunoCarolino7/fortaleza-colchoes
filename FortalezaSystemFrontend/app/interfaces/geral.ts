@@ -61,3 +61,27 @@ interface Cliente {
         telefone?: string | null
     }[] | null
 }
+
+interface AxiosErrorInfo {
+    status?: number
+    message: string
+    name?: string
+    code?: string
+    stack?: string
+}
+
+interface EstoqueTotalAgregado {
+    data: {
+        id: number
+        categoria: string
+        nome: string
+        preco: number
+        quantidade: number
+        tamanho: string
+        estoqueMinimo?: number
+    }[]
+    baixoEstoque: number
+    semEstoque: number
+    emEstoque: number
+    total: number
+}

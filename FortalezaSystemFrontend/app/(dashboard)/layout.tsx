@@ -15,7 +15,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   useEffect(() => {
     if (!isAuthenticated) {
-      console.log("NÃO AUTENTICADO222222222")
       router.replace("/login")
     }
   }, [isAuthenticated, router])
