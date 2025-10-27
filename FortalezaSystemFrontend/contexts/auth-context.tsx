@@ -20,7 +20,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true)
   const router = useRouter()
 
-  // Restaurar sessão do localStorage
   useEffect(() => {
     const savedToken = localStorage.getItem("auth_token")
     if (savedToken) {
@@ -33,10 +32,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const login = async (usuario: string, password: string) => {
     try {
       const body = { User: usuario, Password: password }
-      const response = await axios.post("https://localhost:7195/api/Cliente/login", body)
+      const response = await axios.post("https://localhost:7195/api/cliente/login", body)
 
-      if (response.status === 200 && response.data.token) {
-        const token = response.data.token
+      console.log("response.data", response.data)
+      const data = await response.data;
+
+      if (data.status === 200 && data.token) {
+        const token = data.token
         setToken(token)
         setIsAuthenticated(true)
 
@@ -49,7 +51,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return { success: true }
       }
 
-      return { success: false, error: response.data.error || "Erro ao fazer login" }
+      return { success: false, error: data.error || "Erro ao fazer login" }
     } catch (error) {
       console.error("Login error:", error)
       return { success: false, error: "Erro ao fazer login" }

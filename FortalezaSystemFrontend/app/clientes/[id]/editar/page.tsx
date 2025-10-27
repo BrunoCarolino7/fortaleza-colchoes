@@ -4,8 +4,8 @@ import { use } from "react"
 import { useRouter } from "next/navigation"
 import { Header } from "@/components/header"
 import { ClienteForm } from "@/components/clientes/cliente-form"
-import { clientesIniciais } from "@/lib/data/clientes"
-
+import { useFetch } from "@/hooks/use-request"
+import { Cliente } from "@/lib/data/clientes"
 export default function EditarClientePage({
   params,
 }: {
@@ -13,7 +13,10 @@ export default function EditarClientePage({
 }) {
   const { id } = use(params)
   const router = useRouter()
-  const cliente = clientesIniciais.find((c) => c.id === id)
+
+  const { data: cliente, loading, error } = useFetch<Cliente>(
+    id ? `https://localhost:7195/api/cliente/${id}` : "", { enabled: !!id }
+  )
 
   if (!cliente) {
     return (
@@ -28,9 +31,9 @@ export default function EditarClientePage({
 
   const handleSubmit = (data: any) => {
     console.log("[v0] Cliente atualizado:", { id, ...data })
-    // Aqui você atualizaria o cliente no estado global ou banco de dados
     router.push(`/clientes/${id}`)
   }
+  console.log("Cliente:", cliente)
 
   return (
     <div>

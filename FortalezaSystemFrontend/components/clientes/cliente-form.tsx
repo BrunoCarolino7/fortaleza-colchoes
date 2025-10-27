@@ -1,7 +1,7 @@
 "use client"
 
 import type React from "react"
-import { useState } from "react"
+import { ChangeEvent, FormEvent, useState } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -24,7 +24,7 @@ import { EnderecoForm } from "./endereco-form"
 interface ClienteFormProps {
   cliente?: Cliente
   onSubmit: (data: Omit<Cliente, "id" | "dataCadastro">) => void
-  isSubmitting?: boolean // Adicionando prop para controlar estado de submissão
+  isSubmitting?: boolean
 }
 
 export function ClienteForm({ cliente, onSubmit, isSubmitting = false }: ClienteFormProps) {
@@ -37,17 +37,16 @@ export function ClienteForm({ cliente, onSubmit, isSubmitting = false }: Cliente
     naturalidade: cliente?.naturalidade || "",
     estadoCivil: cliente?.estadoCivil || "Solteiro",
     dataNascimento: cliente?.dataNascimento || "",
-    cpf: cliente?.cpf || "",
-    rg: cliente?.rg || "",
-    assinatura: cliente?.assinatura || "",
+    cpf: cliente?.documento?.cpf || "",
+    rg: cliente?.documento?.rg || ""
   })
 
   const [enderecos, setEnderecos] = useState<Endereco[]>(
     cliente?.enderecos || [
       {
         logradouro: "",
+        numero: "",
         bairro: "",
-        jardim: "",
         cep: "",
         localizacao: "",
         cidade: "",
@@ -64,8 +63,8 @@ export function ClienteForm({ cliente, onSubmit, isSubmitting = false }: Cliente
       salario: 0,
       enderecoEmpresa: {
         logradouro: "",
+        numero: "",
         bairro: "",
-        jardim: "",
         cep: "",
         localizacao: "",
         cidade: "",
@@ -80,7 +79,7 @@ export function ClienteForm({ cliente, onSubmit, isSubmitting = false }: Cliente
 
   const [pagamento, setPagamento] = useState<Pagamento | undefined>(cliente?.pagamento)
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = (e: FormEvent) => {
     e.preventDefault()
     onSubmit({
       ...formData,
@@ -88,11 +87,11 @@ export function ClienteForm({ cliente, onSubmit, isSubmitting = false }: Cliente
       dadosProfissionais,
       conjuge,
       referencias,
-      pagamento,
+      pagamento
     })
   }
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
     setFormData((prev) => ({
       ...prev,
       [e.target.name]: e.target.value,
@@ -104,8 +103,8 @@ export function ClienteForm({ cliente, onSubmit, isSubmitting = false }: Cliente
       ...enderecos,
       {
         logradouro: "",
+        numero: "",
         bairro: "",
-        jardim: "",
         cep: "",
         localizacao: "",
         cidade: "",
@@ -131,8 +130,8 @@ export function ClienteForm({ cliente, onSubmit, isSubmitting = false }: Cliente
         nome: "",
         endereco: {
           logradouro: "",
+          numero: "",
           bairro: "",
-          jardim: "",
           cep: "",
           localizacao: "",
           cidade: "",
@@ -302,16 +301,6 @@ export function ClienteForm({ cliente, onSubmit, isSubmitting = false }: Cliente
                 <div className="space-y-2">
                   <Label htmlFor="rg">RG</Label>
                   <Input id="rg" name="rg" value={formData.rg} onChange={handleChange} required />
-                </div>
-                <div className="space-y-2 sm:col-span-2">
-                  <Label htmlFor="assinatura">Assinatura</Label>
-                  <Input
-                    id="assinatura"
-                    name="assinatura"
-                    value={formData.assinatura}
-                    onChange={handleChange}
-                    required
-                  />
                 </div>
               </div>
             </CardContent>

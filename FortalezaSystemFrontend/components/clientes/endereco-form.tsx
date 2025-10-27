@@ -38,30 +38,25 @@ export function EnderecoForm({
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="grid gap-4 md:grid-cols-2">
-          <div className="space-y-2 md:col-span-2">
+          <div className="space-y-2 ">
             <Label>Logradouro</Label>
             <Input value={endereco.logradouro} onChange={(e) => handleChange("logradouro", e.target.value)} required />
+          </div>
+          <div className="space-y-2 w-[150px]">
+            <Label>Número</Label>
+            <Input type="number" value={endereco.numero} onChange={(e) => handleChange("numero", e.target.value)} required />
           </div>
           <div className="space-y-2">
             <Label>Bairro</Label>
             <Input value={endereco.bairro} onChange={(e) => handleChange("bairro", e.target.value)} required />
           </div>
           <div className="space-y-2">
-            <Label>Jardim</Label>
-            <Input value={endereco.jardim} onChange={(e) => handleChange("jardim", e.target.value)} required />
-          </div>
-          <div className="space-y-2">
             <Label>CEP</Label>
             <Input value={endereco.cep} onChange={(e) => handleChange("cep", e.target.value)} required />
           </div>
           <div className="space-y-2">
-            <Label>Localização</Label>
-            <Input
-              value={endereco.localizacao}
-              onChange={(e) => handleChange("localizacao", e.target.value)}
-              placeholder="Ex: Apto 101, Bloco A"
-              required
-            />
+            <Label>Referência</Label>
+            <Input value={endereco.localizacao} onChange={(e) => handleChange("localizacao", e.target.value)} placeholder="Ex: Apto 101, Bloco A" required />
           </div>
           <div className="space-y-2">
             <Label>Cidade</Label>

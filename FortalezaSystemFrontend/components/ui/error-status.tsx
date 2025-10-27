@@ -2,7 +2,7 @@ export function ErrorState({ loading, status, message, }: {
     loading?: boolean, status?: number, message: string
 }) {
     if (loading) return null
-    if (!status) return null // 🚀 não renderiza nada até ter status
+    if (!status) return null 
 
     let title: string
     let description: string

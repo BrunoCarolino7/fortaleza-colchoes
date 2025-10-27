@@ -1,7 +1,6 @@
 "use client"
 
 import type React from "react"
-
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
@@ -9,15 +8,17 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Loader2 } from "lucide-react" // 👈 ícone do spinner
 import type { Produto } from "@/lib/data/estoque"
 
 interface ProdutoFormProps {
   produto?: Produto
-  onSubmit: (data: Omit<Produto, "id" | "dataCadastro">) => void
+  onSubmit: (data: Omit<Produto, "id" | "dataCadastro">) => Promise<void> | void
 }
 
 export function ProdutoForm({ produto, onSubmit }: ProdutoFormProps) {
   const router = useRouter()
+  const [isLoading, setIsLoading] = useState(false)
   const [formData, setFormData] = useState({
     nome: produto?.nome || "",
     categoria: produto?.categoria || "",
@@ -29,9 +30,14 @@ export function ProdutoForm({ produto, onSubmit }: ProdutoFormProps) {
     descricao: produto?.descricao || "",
   })
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    onSubmit(formData)
+    try {
+      setIsLoading(true)
+      await onSubmit(formData)
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -105,9 +111,21 @@ export function ProdutoForm({ produto, onSubmit }: ProdutoFormProps) {
               <Textarea id="descricao" name="descricao" value={formData.descricao} onChange={handleChange} rows={3} />
             </div>
           </div>
+
           <div className="flex gap-2 pt-4">
-            <Button type="submit">Salvar</Button>
-            <Button type="button" variant="outline" onClick={() => router.back()}>
+            <Button
+              type="submit"
+              disabled={isLoading}
+              className="flex justify-center items-center min-w-[90px]"
+            >
+              {isLoading ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                "Salvar"
+              )}
+            </Button>
+
+            <Button type="button" variant="outline" onClick={() => router.back()} disabled={isLoading}>
               Cancelar
             </Button>
           </div>

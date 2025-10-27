@@ -3,14 +3,19 @@
 import { useRouter } from "next/navigation"
 import { Header } from "@/components/header"
 import { ProdutoForm } from "@/components/estoque/produto-form"
+import axios from "axios"
 
 export default function NovoProdutoPage() {
   const router = useRouter()
 
-  const handleSubmit = (data: any) => {
-    console.log("[v0] Novo produto:", data)
-    // Aqui você adicionaria o produto ao estado global ou banco de dados
-    router.push("/estoque")
+  const handleSubmit = async (data: any) => {
+    try {
+      await axios.post("https://localhost:7195/api/estoque", data)
+      console.log("Produto salvo com sucesso!", data)
+      router.push("/estoque")
+    } catch (error) {
+      console.error("Erro ao salvar produto:", error)
+    }
   }
 
   return (

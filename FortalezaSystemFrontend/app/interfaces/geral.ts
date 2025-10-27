@@ -1,4 +1,4 @@
-interface Cliente {
+export interface Cliente {
     id: number
     nome?: string | null
     filiacao?: string | null
@@ -62,7 +62,7 @@ interface Cliente {
     }[] | null
 }
 
-interface AxiosErrorInfo {
+export interface AxiosErrorInfo {
     status?: number
     message: string
     name?: string
@@ -70,7 +70,7 @@ interface AxiosErrorInfo {
     stack?: string
 }
 
-interface EstoqueTotalAgregado {
+export interface EstoqueTotalAgregado {
     data: {
         id: number
         categoria: string
@@ -84,4 +84,77 @@ interface EstoqueTotalAgregado {
     semEstoque: number
     emEstoque: number
     total: number
+}
+export interface Produto {
+    id: string
+    nome: string
+    categoria: string
+    tamanho: string
+    preco: number
+    quantidade: number
+    estoqueMinimo: number
+    fornecedor: string
+    descricao: string
+    dataCadastro: string
+}
+export interface Pedido {
+  id: number;
+  clienteId: number;
+  informacoesPagamento: InformacoesPagamento;
+}
+
+export interface InformacoesPagamento {
+  valorTotal: number;
+  sinal: number;
+  dataInicio: string; 
+  numeroParcelas: number;
+  aReceber: number;
+  totalPago: number;
+  totalCancelado: number;
+  parcelas: Parcela[];
+}
+
+export interface Parcela {
+  numero: number;
+  valor: number;
+  vencimento: string; 
+  statusPagamento: EStatusPagamento;
+}
+
+export interface Pedido {
+  id: number
+  clienteId: number
+  informacoesPagamento: InformacoesPagamento
+}
+
+export interface InformacoesPagamento {
+  valorTotal: number
+  sinal: number
+  dataInicio: string
+  numeroParcelas: number
+  aReceber: number
+  totalPago: number
+  totalCancelado: number
+  parcelas: Parcela[]
+}
+
+export interface Parcela {
+  numero: number
+  valor: number
+  vencimento: string
+  statusPagamento: EStatusPagamento
+}
+
+export enum EStatusPagamento {
+  Pendente = 1,
+  Pago = 2,
+  Cancelado = 3,
+  Estornado = 4,
+}
+
+export type PedidosResponse = Pedido[]
+
+export interface EstoqueTotalAgregado {
+  total: number
+  baixoEstoque: number
 }

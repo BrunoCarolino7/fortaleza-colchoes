@@ -3,15 +3,11 @@
 import { Header } from "@/components/header"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { UsersIcon, PackageIcon, DollarSignIcon } from "@/components/icons"
-import axios, { AxiosError } from "axios"
+import axios, { type AxiosError } from "axios"
 import { useEffect, useState } from "react"
 import { Skeleton } from "@/components/ui/skeleton"
+import { AxiosErrorInfo, EstoqueTotalAgregado } from "@/app/interfaces/geral"
 
-enum StatusEstoqueEnum {
-  EM_ESTOQUE = 1,
-  BAIXO_ESTOQUE = 2,
-  SEM_ESTOQUE = 3
-}
 
 export default function DashboardPage() {
   const [totalClientes, setTotalClientes] = useState<number | null>(null)
@@ -20,7 +16,6 @@ export default function DashboardPage() {
   const [errorEstoque, setErrorEstoque] = useState<AxiosErrorInfo | null>(null)
 
   useEffect(() => {
-
     axios
       .get("https://localhost:7195/api/cliente/count")
       .then((response) => setTotalClientes(response.data))
@@ -35,7 +30,6 @@ export default function DashboardPage() {
         setErrorClientes(errorInfo)
       })
 
-    // Requisição de estoque
     axios
       .get("https://localhost:7195/api/estoque")
       .then((response) => setTotalEstoque(response.data))
@@ -51,8 +45,7 @@ export default function DashboardPage() {
       })
   }, [])
 
-  console.log("Clientes", totalClientes)
-  console.log("Estoque", totalEstoque)
+  console.log("ESTOQUE", totalEstoque)
 
   const stats = [
     {
@@ -72,39 +65,30 @@ export default function DashboardPage() {
       value:
         errorEstoque?.status === 404 || totalEstoque === null ? (
           "0"
-        ) : totalEstoque.data !== null ? (
+        ) : totalEstoque !== null ? (
           totalEstoque.total
         ) : (
           <Skeleton className="h-6 w-12 rounded" />
         ),
       icon: PackageIcon,
       trend: totalEstoque?.baixoEstoque ? `Baixo estoque: ${totalEstoque.baixoEstoque}` : undefined,
-    },
-    {
-      title: "Vendas do Mês",
-      value: "R$ 45.231",
-      icon: DollarSignIcon,
-    },
+    }
   ]
 
   return (
     <div className="flex flex-col">
-      <Header title="Dashboard" />
-      <div className="flex-1 overflow-auto p-4 sm:p-6">
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <Header title="Painel de Controle" />
+      <div className="flex-1 overflow-auto bg-background p-6 scrollbar-thin">
+        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-2">
           {stats.map((stat) => (
-            <Card key={stat.title}>
+            <Card key={stat.title} className="transition-all duration-200 hover:shadow-lg">
               <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground">
-                  {stat.title}
-                </CardTitle>
-                <stat.icon className="h-4 w-4 text-muted-foreground" />
+                <CardTitle className="text-sm font-medium text-muted-foreground">{stat.title}</CardTitle>
+                <div className="rounded-lg bg-primary/10 p-2">{stat.icon({ className: "h-5 w-5 text-primary" })}</div>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{stat.value}</div>
-                {stat.trend && (
-                  <p className="text-xs text-muted-foreground">{stat.trend}</p>
-                )}
+                <div className="font-heading text-3xl font-bold tracking-tight">{stat.value}</div>
+                {stat.trend && <p className="mt-2 text-xs text-muted-foreground">{stat.trend}</p>}
               </CardContent>
             </Card>
           ))}

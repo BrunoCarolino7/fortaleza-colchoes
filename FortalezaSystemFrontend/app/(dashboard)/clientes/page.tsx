@@ -39,22 +39,21 @@ interface Cliente {
   nome: string
   estadoCivil?: string
   documento?: { cpf?: string; rg?: string }
-  enderecos?: { cidade?: string; estado?: string }[]
-}
-
-interface ClienteResponse {
-  data: Cliente[]
-  totalItems: number
-  page: number
-  pageSize: number
-  totalPages: number
+  enderecos?: {
+    logradouro?: string
+    numero?: string
+    bairro?: string
+    cidade?: string
+    estado?: string
+    cep?: string
+  }[]
 }
 
 export default function ClientesPage() {
   const [clientes, setClientes] = useState<Cliente[]>([])
+  const [filteredClientes, setFilteredClientes] = useState<Cliente[]>([])
   const [totalPages, setTotalPages] = useState(1)
   const [currentPage, setCurrentPage] = useState(1)
-  const [totalItems, setTotalItems] = useState(0)
   const [searchTerm, setSearchTerm] = useState("")
   const [loading, setLoading] = useState(true)
   const [openDialog, setOpenDialog] = useState(false)
@@ -63,30 +62,57 @@ export default function ClientesPage() {
 
   const pageSize = 10
 
-  const fetchClientes = async (page: number, search?: string) => {
+  const fetchClientes = async () => {
     setLoading(true)
     try {
-      const response = await axios.get<ClienteResponse>(
-        `https://localhost:7195/api/cliente?page=${page}&pageSize=${pageSize}${search ? `&search=${encodeURIComponent(search)}` : ""
-        }`
+      const response = await axios.get<{ data: Cliente[] }>(
+        "https://localhost:7195/api/cliente?page=1&pageSize=9999"
       )
-
-      const result = response.data
-      setClientes(result.data || [])
-      setTotalPages(result.totalPages ?? Math.ceil((result.totalItems ?? 0) / pageSize))
-      setTotalItems(result.totalItems ?? 0)
-      setCurrentPage(result.page ?? page)
+      const all = response.data.data || []
+      setClientes(all)
+      setFilteredClientes(all)
+      setTotalPages(Math.ceil(all.length / pageSize))
     } catch (error) {
       console.error(error)
       setClientes([])
+      setFilteredClientes([])
     } finally {
       setLoading(false)
     }
   }
 
   useEffect(() => {
-    fetchClientes(currentPage, searchTerm)
-  }, [currentPage, searchTerm])
+    fetchClientes()
+  }, [])
+
+  useEffect(() => {
+    const term = searchTerm.toLowerCase().trim();
+
+    if (!term) {
+      setFilteredClientes(clientes);
+      setTotalPages(Math.max(1, Math.ceil(clientes.length / pageSize)));
+      setCurrentPage(1);
+      return;
+    }
+
+    const hasNumbers = /\d/.test(term);
+    const searchNum = term.replace(/\D/g, "");
+
+    const filtrados = clientes.filter((c) => {
+      const nome = c.nome?.toLowerCase() ?? "";
+      const cpf = c.documento?.cpf?.replace(/\D/g, "") ?? "";
+
+      if (hasNumbers) {
+        return cpf.includes(searchNum);
+      }
+
+      return nome.includes(term);
+    });
+
+    setFilteredClientes(filtrados);
+    setTotalPages(Math.max(1, Math.ceil(filtrados.length / pageSize)));
+    setCurrentPage(1);
+  }, [searchTerm, clientes]);
 
   const handlePrevious = () => {
     if (currentPage > 1) setCurrentPage((prev) => prev - 1)
@@ -105,8 +131,13 @@ export default function ClientesPage() {
     if (!selectedId) return
     console.log(`Cliente ${selectedId} excluído (simulação)`)
     setOpenDialog(false)
-    fetchClientes(currentPage, searchTerm)
+    fetchClientes()
   }
+
+  const paginatedClientes = filteredClientes.slice(
+    (currentPage - 1) * pageSize,
+    currentPage * pageSize
+  )
 
   if (loading) {
     return (
@@ -128,12 +159,9 @@ export default function ClientesPage() {
           <div className="relative w-full sm:w-64">
             <SearchIcon className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="Busque por nome, CPF ou RG"
+              placeholder="Busque por nome ou CPF "
               value={searchTerm}
-              onChange={(e) => {
-                setSearchTerm(e.target.value)
-                setCurrentPage(1)
-              }}
+              onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-8"
             />
           </div>
@@ -148,7 +176,7 @@ export default function ClientesPage() {
         {/* === MOBILE === */}
         {isMobile ? (
           <div className="flex flex-col gap-3">
-            {clientes.map((cliente) => (
+            {paginatedClientes.map((cliente) => (
               <div
                 key={cliente.id}
                 className="border border-border rounded-lg p-4 bg-card shadow-sm flex flex-col gap-2"
@@ -190,6 +218,12 @@ export default function ClientesPage() {
               </div>
             ))}
 
+            {paginatedClientes.length === 0 && (
+              <div className="text-center text-muted-foreground py-8">
+                Nenhum cliente encontrado
+              </div>
+            )}
+
             {/* Paginação MOBILE */}
             {totalPages > 1 && (
               <div className="flex justify-between items-center p-4 text-sm text-muted-foreground">
@@ -218,27 +252,36 @@ export default function ClientesPage() {
         ) : (
           /* === DESKTOP === */
           <div className="hidden rounded-lg border border-border bg-card md:block">
-            {clientes.length > 0 ? (
+            {paginatedClientes.length > 0 ? (
               <>
                 <Table className="table-fixed w-full">
                   <TableHeader>
                     <TableRow>
                       <TableHead>Nome</TableHead>
-                      <TableHead>CPF</TableHead>
-                      <TableHead>RG</TableHead>
-                      <TableHead>Estado Civil</TableHead>
+                      <TableHead>Logradouro</TableHead>
+                      <TableHead>Bairro</TableHead>
                       <TableHead>Cidade</TableHead>
+                      <TableHead>CEP</TableHead>
+                      <TableHead>CPF</TableHead>
                       <TableHead className="text-right">Ações</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {clientes.map((cliente) => (
+                    {paginatedClientes.map((cliente) => (
                       <TableRow key={cliente.id}>
                         <TableCell>{cliente.nome}</TableCell>
-                        <TableCell>{cliente.documento?.cpf ?? "-"}</TableCell>
-                        <TableCell>{cliente.documento?.rg ?? "-"}</TableCell>
-                        <TableCell>{cliente.estadoCivil ?? "-"}</TableCell>
+                        <TableCell>
+                          {cliente.enderecos?.[0]?.logradouro
+                            ? `${cliente.enderecos[0].logradouro}${cliente.enderecos[0].numero
+                              ? `, ${cliente.enderecos[0].numero}`
+                              : ""
+                            }`
+                            : "-"}
+                        </TableCell>
+                        <TableCell>{cliente.enderecos?.[0]?.bairro ?? "-"}</TableCell>
                         <TableCell>{cliente.enderecos?.[0]?.cidade ?? "-"}</TableCell>
+                        <TableCell>{cliente.enderecos?.[0]?.cep ?? "-"}</TableCell>
+                        <TableCell>{cliente.documento?.cpf ?? "-"}</TableCell>
                         <TableCell className="text-right">
                           <div className="flex justify-end gap-2">
                             <Link href={`/clientes/${cliente.id}`}>
@@ -267,13 +310,24 @@ export default function ClientesPage() {
 
                 <div className="flex justify-between items-center p-4 border-t text-sm text-muted-foreground">
                   <span>
-                    Página {currentPage} de {totalPages} — {totalItems} clientes no total
+                    Página {currentPage} de {totalPages} — {filteredClientes.length}{" "}
+                    clientes encontrados
                   </span>
                   <div className="flex gap-2">
-                    <Button variant="outline" size="sm" onClick={handlePrevious} disabled={currentPage === 1}>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handlePrevious}
+                      disabled={currentPage === 1}
+                    >
                       Anterior
                     </Button>
-                    <Button variant="outline" size="sm" onClick={handleNext} disabled={currentPage === totalPages}>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleNext}
+                      disabled={currentPage === totalPages}
+                    >
                       Próxima
                     </Button>
                   </div>
@@ -287,7 +341,9 @@ export default function ClientesPage() {
                   className="w-20 h-20 mx-auto mb-3 opacity-70"
                 />
                 <p className="text-sm font-medium mb-1">Nenhum cliente encontrado</p>
-                <p className="text-xs mb-4">Cadastre um cliente para começar a gerenciar.</p>
+                <p className="text-xs mb-4">
+                  Cadastre um cliente para começar a gerenciar.
+                </p>
                 <Link href="/clientes/novo">
                   <Button size="sm">
                     <PlusIcon className="mr-2 h-4 w-4" /> Adicionar Cliente
@@ -305,7 +361,8 @@ export default function ClientesPage() {
           <AlertDialogHeader>
             <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
             <AlertDialogDescription>
-              Tem certeza que deseja excluir este cliente? Essa ação não pode ser desfeita.
+              Tem certeza que deseja excluir este cliente? Essa ação não pode ser
+              desfeita.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

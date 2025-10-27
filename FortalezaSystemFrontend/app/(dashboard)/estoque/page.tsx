@@ -7,9 +7,5 @@ async function delay(ms: number) {
 }
 
 export default async function EstoquePage() {
-
-  await delay(2000)
-
-  // quando o delay acabar, o Next substitui o loading.tsx por isso
-  return <EstoqueContent produtosIniciais={produtosIniciais} />
+  return <EstoqueContent  />
 }

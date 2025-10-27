@@ -1,12 +1,17 @@
 import { useEffect, useState } from "react"
 import axios, { AxiosRequestConfig } from "axios"
 
-export function useFetch<T = any>(url: string, config?: AxiosRequestConfig) {
+export function useFetch<T = any>(
+  url: string,
+  config?: AxiosRequestConfig & { enabled?: boolean }
+) {
   const [data, setData] = useState<T | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<unknown>(null)
 
   useEffect(() => {
+    if (!url || config?.enabled === false) return
+
     let isMounted = true
 
     const fetchData = async () => {
@@ -28,7 +33,6 @@ export function useFetch<T = any>(url: string, config?: AxiosRequestConfig) {
     }
 
     fetchData()
-
     return () => {
       isMounted = false
     }

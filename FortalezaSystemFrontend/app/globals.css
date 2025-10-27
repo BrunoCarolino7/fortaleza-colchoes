@@ -1,79 +1,117 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
+/* Complete modern design system with sophisticated color palette */
 :root {
-  --background: hsl(0 0% 100%);
-  --foreground: hsl(215 25% 18%);
+  /* Backgrounds - Soft warm neutrals */
+  --background: hsl(30 20% 98%);
+  --foreground: hsl(220 15% 15%);
+
+  /* Cards with subtle elevation */
   --card: hsl(0 0% 100%);
-  --card-foreground: oklch(0.145 0 0);
+  --card-foreground: hsl(220 15% 15%);
+
+  /* Popovers */
   --popover: hsl(0 0% 100%);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: hsl(215 45% 32%);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: hsl(215 15% 93%);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: hsl(215 15% 93%);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: hsl(215 25% 85%);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: hsl(0 84.2% 60.2%);
-  --destructive-foreground: oklch(0.577 0.245 27.325);
-  --border: hsl(215 18% 88%);
-  --input: hsl(215 18% 88%);
-  --ring: hsl(215 45% 32%);
-  --chart-1: hsl(215 45% 32%);
-  --chart-2: hsl(220 38% 45%);
-  --chart-3: hsl(210 32% 58%);
-  --chart-4: hsl(205 25% 68%);
-  --chart-5: hsl(218 52% 22%);
-  --radius: 0.625rem;
-  --sidebar: hsl(215 12% 97%);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+  --popover-foreground: hsl(220 15% 15%);
+
+  /* Primary - Deep sophisticated blue */
+  --primary: hsl(220 70% 45%);
+  --primary-foreground: hsl(0 0% 100%);
+
+  /* Secondary - Warm slate */
+  --secondary: hsl(220 15% 95%);
+  --secondary-foreground: hsl(220 15% 25%);
+
+  /* Muted elements */
+  --muted: hsl(220 15% 96%);
+  --muted-foreground: hsl(220 10% 45%);
+
+  /* Accent - Vibrant coral for CTAs */
+  --accent: hsl(15 85% 60%);
+  --accent-foreground: hsl(0 0% 100%);
+
+  /* Destructive */
+  --destructive: hsl(0 72% 51%);
+  --destructive-foreground: hsl(0 0% 100%);
+
+  /* Borders and inputs */
+  --border: hsl(220 15% 90%);
+  --input: hsl(220 15% 90%);
+  --ring: hsl(220 70% 45%);
+
+  /* Chart colors - Sophisticated palette */
+  --chart-1: hsl(220 70% 45%);
+  --chart-2: hsl(15 85% 60%);
+  --chart-3: hsl(180 60% 50%);
+  --chart-4: hsl(280 60% 55%);
+  --chart-5: hsl(45 90% 55%);
+
+  /* Border radius - Modern and refined */
+  --radius: 0.75rem;
+
+  /* Sidebar */
+  --sidebar: hsl(220 20% 18%);
+  --sidebar-foreground: hsl(220 15% 95%);
+  --sidebar-primary: hsl(220 70% 45%);
+  --sidebar-primary-foreground: hsl(0 0% 100%);
+  --sidebar-accent: hsl(220 20% 25%);
+  --sidebar-accent-foreground: hsl(220 15% 95%);
+  --sidebar-border: hsl(220 20% 25%);
+  --sidebar-ring: hsl(220 70% 45%);
 }
 
 .dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.145 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.145 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.985 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.396 0.141 25.723);
-  --destructive-foreground: oklch(0.637 0.237 25.331);
-  --border: oklch(0.269 0 0);
-  --input: oklch(0.269 0 0);
-  --ring: oklch(0.439 0 0);
-  --chart-1: oklch(0.488 0.243 264.376);
-  --chart-2: oklch(0.696 0.17 162.48);
-  --chart-3: oklch(0.769 0.188 70.08);
-  --chart-4: oklch(0.627 0.265 303.9);
-  --chart-5: oklch(0.645 0.246 16.439);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(0.269 0 0);
-  --sidebar-ring: oklch(0.439 0 0);
+  /* Dark mode - Deep sophisticated blacks */
+  --background: hsl(220 20% 8%);
+  --foreground: hsl(220 15% 95%);
+
+  --card: hsl(220 20% 12%);
+  --card-foreground: hsl(220 15% 95%);
+
+  --popover: hsl(220 20% 12%);
+  --popover-foreground: hsl(220 15% 95%);
+
+  --primary: hsl(220 70% 55%);
+  --primary-foreground: hsl(0 0% 100%);
+
+  --secondary: hsl(220 20% 18%);
+  --secondary-foreground: hsl(220 15% 90%);
+
+  --muted: hsl(220 20% 18%);
+  --muted-foreground: hsl(220 10% 60%);
+
+  --accent: hsl(15 85% 55%);
+  --accent-foreground: hsl(0 0% 100%);
+
+  --destructive: hsl(0 72% 51%);
+  --destructive-foreground: hsl(0 0% 100%);
+
+  --border: hsl(220 20% 22%);
+  --input: hsl(220 20% 22%);
+  --ring: hsl(220 70% 55%);
+
+  --chart-1: hsl(220 70% 55%);
+  --chart-2: hsl(15 85% 60%);
+  --chart-3: hsl(180 60% 55%);
+  --chart-4: hsl(280 60% 60%);
+  --chart-5: hsl(45 90% 60%);
+
+  --sidebar: hsl(220 20% 10%);
+  --sidebar-foreground: hsl(220 15% 95%);
+  --sidebar-primary: hsl(220 70% 55%);
+  --sidebar-primary-foreground: hsl(0 0% 100%);
+  --sidebar-accent: hsl(220 20% 18%);
+  --sidebar-accent-foreground: hsl(220 15% 95%);
+  --sidebar-border: hsl(220 20% 18%);
+  --sidebar-ring: hsl(220 70% 55%);
 }
 
 @theme inline {
-  /* optional: --font-sans, --font-serif, --font-mono if they are applied in the layout.tsx */
+  /* Add font family variables */
+  --font-sans: var(--font-inter);
+  --font-heading: var(--font-outfit);
+
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -114,10 +152,55 @@
 
 @layer base {
   * {
-    @apply border-border outline-ring/50;
+    @apply border-border;
   }
 
   body {
     @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+
+  /* Enhanced typography with better hierarchy */
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-family: var(--font-outfit);
+    @apply font-semibold tracking-tight;
+  }
+
+  h1 {
+    @apply text-4xl;
+  }
+
+  h2 {
+    @apply text-3xl;
+  }
+
+  h3 {
+    @apply text-2xl;
+  }
+}
+
+/* Custom scrollbar styling for modern look */
+@layer utilities {
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    background: hsl(var(--muted-foreground) / 0.3);
+    border-radius: 4px;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--muted-foreground) / 0.5);
   }
 }

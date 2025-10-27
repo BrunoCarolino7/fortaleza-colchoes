@@ -10,6 +10,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Stepper } from "@/components/ui/stepper"
 import { PlusIcon, Trash2Icon, ChevronLeftIcon, ChevronRightIcon } from "@/components/icons"
+import { PatternFormat } from "react-number-format"
+
 import type {
   Cliente,
   Endereco,
@@ -18,8 +20,10 @@ import type {
   Referencia,
   Pagamento,
   Parcela,
+  ProdutoSelecionado,
 } from "@/lib/data/clientes"
 import { EnderecoForm } from "./endereco-form"
+import { ProdutoSeletor } from "./produto-seletor"
 
 interface ClienteFormStepperProps {
   cliente?: Cliente
@@ -33,6 +37,7 @@ const steps = [
   { id: "profissional", title: "Profissional", description: "Dados profissionais" },
   { id: "conjuge", title: "Cônjuge", description: "Dados do cônjuge" },
   { id: "referencias", title: "Referências", description: "Referências pessoais" },
+  { id: "produtos", title: "Produtos", description: "Selecionar produtos" },
   { id: "pagamento", title: "Pagamento", description: "Informações de pagamento" },
 ]
 
@@ -42,22 +47,23 @@ export function ClienteFormStepper({ cliente, onSubmit, isSubmitting = false }: 
 
   const [formData, setFormData] = useState({
     nome: cliente?.nome || "",
+    email: cliente?.email || "",
+    telefone: cliente?.telefone || "",
     filiacao: cliente?.filiacao || "",
     nacionalidade: cliente?.nacionalidade || "Brasileiro",
     naturalidade: cliente?.naturalidade || "",
     estadoCivil: cliente?.estadoCivil || "Solteiro",
     dataNascimento: cliente?.dataNascimento || "",
-    cpf: cliente?.cpf || "",
-    rg: cliente?.rg || "",
-    assinatura: cliente?.assinatura || "",
+    cpf: cliente?.documento?.cpf || "",
+    rg: cliente?.documento?.rg || "",
   })
 
   const [enderecos, setEnderecos] = useState<Endereco[]>(
     cliente?.enderecos || [
       {
         logradouro: "",
+        numero: "",
         bairro: "",
-        jardim: "",
         cep: "",
         localizacao: "",
         cidade: "",
@@ -74,8 +80,8 @@ export function ClienteFormStepper({ cliente, onSubmit, isSubmitting = false }: 
       salario: 0,
       enderecoEmpresa: {
         logradouro: "",
+        numero: "",
         bairro: "",
-        jardim: "",
         cep: "",
         localizacao: "",
         cidade: "",
@@ -86,6 +92,9 @@ export function ClienteFormStepper({ cliente, onSubmit, isSubmitting = false }: 
 
   const [conjuge, setConjuge] = useState<Conjuge | undefined>(cliente?.conjuge)
   const [referencias, setReferencias] = useState<Referencia[]>(cliente?.referencias || [])
+  const [produtosSelecionados, setProdutosSelecionados] = useState<ProdutoSelecionado[]>(
+    cliente?.produtosSelecionados || [],
+  )
   const [pagamento, setPagamento] = useState<Pagamento | undefined>(cliente?.pagamento)
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -96,6 +105,7 @@ export function ClienteFormStepper({ cliente, onSubmit, isSubmitting = false }: 
       dadosProfissionais,
       conjuge,
       referencias,
+      produtosSelecionados,
       pagamento,
     })
   }
@@ -112,8 +122,8 @@ export function ClienteFormStepper({ cliente, onSubmit, isSubmitting = false }: 
       ...enderecos,
       {
         logradouro: "",
+        numero: "",
         bairro: "",
-        jardim: "",
         cep: "",
         localizacao: "",
         cidade: "",
@@ -139,8 +149,8 @@ export function ClienteFormStepper({ cliente, onSubmit, isSubmitting = false }: 
         nome: "",
         endereco: {
           logradouro: "",
+          numero: "",
           bairro: "",
-          jardim: "",
           cep: "",
           localizacao: "",
           cidade: "",
@@ -158,6 +168,10 @@ export function ClienteFormStepper({ cliente, onSubmit, isSubmitting = false }: 
     const newReferencias = [...referencias]
     newReferencias[index] = referencia
     setReferencias(newReferencias)
+  }
+
+  const calcularTotalProdutos = () => {
+    return produtosSelecionados.reduce((acc, produto) => acc + produto.preco, 0)
   }
 
   const gerarParcelas = () => {
@@ -231,18 +245,41 @@ export function ClienteFormStepper({ cliente, onSubmit, isSubmitting = false }: 
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid gap-4 sm:grid-cols-2">
-              <div className="space-y-2 sm:col-span-2">
+              <div className="space-y-2 ">
                 <Label htmlFor="nome">Nome Completo</Label>
                 <Input id="nome" name="nome" value={formData.nome} onChange={handleChange} required />
               </div>
-              <div className="space-y-2 sm:col-span-2">
+              <div className="space-y-2">
+                <Label htmlFor="email">Email</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  name="email"
+                  placeholder="john@outlook.com"
+                  value={formData.email}
+                  onChange={handleChange}
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="telefone">Telefone</Label>
+                <PatternFormat
+                  format="(##) #####-####"
+                  value={formData.telefone}
+                  onValueChange={(values) => setFormData((prev) => ({ ...prev, telefone: values.value }))}
+                  customInput={Input}
+                  placeholder="(11) 99999-9999"
+                  required
+                />
+              </div>
+              <div className="space-y-2">
                 <Label htmlFor="filiacao">Filiação</Label>
                 <Input
                   id="filiacao"
                   name="filiacao"
                   value={formData.filiacao}
                   onChange={handleChange}
-                  placeholder="Nome do pai e da mãe"
+                  placeholder="Nome do pai ou mãe"
                   required
                 />
               </div>
@@ -297,15 +334,26 @@ export function ClienteFormStepper({ cliente, onSubmit, isSubmitting = false }: 
               </div>
               <div className="space-y-2">
                 <Label htmlFor="cpf">CPF</Label>
-                <Input id="cpf" name="cpf" value={formData.cpf} onChange={handleChange} required />
+                <PatternFormat
+                  format="###.###.###-##"
+                  value={formData.cpf}
+                  onValueChange={(values) => setFormData((prev) => ({ ...prev, cpf: values.value }))}
+                  customInput={Input}
+                  placeholder="000.000.000-00"
+                  required
+                />
               </div>
+              {/* RG */}
               <div className="space-y-2">
                 <Label htmlFor="rg">RG</Label>
-                <Input id="rg" name="rg" value={formData.rg} onChange={handleChange} required />
-              </div>
-              <div className="space-y-2 sm:col-span-2">
-                <Label htmlFor="assinatura">Assinatura</Label>
-                <Input id="assinatura" name="assinatura" value={formData.assinatura} onChange={handleChange} required />
+                <PatternFormat
+                  format="##.###.###-#"
+                  value={formData.rg}
+                  onValueChange={(values) => setFormData((prev) => ({ ...prev, rg: values.value }))}
+                  customInput={Input}
+                  placeholder="00.000.000-0"
+                  required
+                />
               </div>
             </div>
           </CardContent>
@@ -346,18 +394,6 @@ export function ClienteFormStepper({ cliente, onSubmit, isSubmitting = false }: 
                     setDadosProfissionais((prev) => ({
                       ...prev!,
                       empresa: e.target.value,
-                    }))
-                  }
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>Emprego Anterior</Label>
-                <Input
-                  value={dadosProfissionais?.empregoAnterior || ""}
-                  onChange={(e) =>
-                    setDadosProfissionais((prev) => ({
-                      ...prev!,
-                      empregoAnterior: e.target.value,
                     }))
                   }
                 />
@@ -570,6 +606,10 @@ export function ClienteFormStepper({ cliente, onSubmit, isSubmitting = false }: 
       )}
 
       {currentStep === 6 && (
+        <ProdutoSeletor produtosSelecionados={produtosSelecionados} onChange={setProdutosSelecionados} />
+      )}
+
+      {currentStep === 7 && (
         <Card>
           <CardHeader>
             <CardTitle>Informações de Pagamento</CardTitle>
@@ -581,7 +621,7 @@ export function ClienteFormStepper({ cliente, onSubmit, isSubmitting = false }: 
                 variant="outline"
                 onClick={() =>
                   setPagamento({
-                    valorTotal: 0,
+                    valorTotal: calcularTotalProdutos(),
                     sinal: 0,
                     dataInicio: "",
                     numeroParcelas: 1,
