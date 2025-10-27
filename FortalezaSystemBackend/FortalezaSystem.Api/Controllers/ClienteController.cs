@@ -18,7 +18,6 @@ public class ClienteController(IMediator mediator, AuthenticateUserUseCase authU
     private readonly IMediator _mediator = mediator;
     private readonly AuthenticateUserUseCase _authUseCase = authUseCase;
 
-    // 🔹 GET: api/cliente
     [HttpGet]
     public async Task<IActionResult> GetAll(
         [FromQuery] int page = 1,
@@ -44,8 +43,6 @@ public class ClienteController(IMediator mediator, AuthenticateUserUseCase authU
             : (ActionResult<IEnumerable<ClienteDto>>)Ok(result);
     }
 
-
-    // 🔹 GET: api/cliente/{id}
     [HttpGet("{id:int}")]
     public async Task<ActionResult<ClienteDto>> GetById(int id, CancellationToken cancellationToken)
     {
@@ -61,15 +58,13 @@ public class ClienteController(IMediator mediator, AuthenticateUserUseCase authU
         return Ok(new { Token = token, Status = 200 });
     }
 
-    // 🔹 POST: api/cliente
     [HttpPost]
-    public async Task<ActionResult<Guid>> Create([FromBody] CreateClienteCommand command, CancellationToken cancellationToken)
+    public async Task<ActionResult<int>> Create([FromBody] CreateClienteCommand command, CancellationToken cancellationToken)
     {
-        var id = await _mediator.Send(command, cancellationToken);
-        return CreatedAtAction(nameof(GetById), new { id }, id);
+        var result = await _mediator.Send(command, cancellationToken);
+        return CreatedAtAction(nameof(GetById), new { result.Id }, result.Id);
     }
 
-    // 🔹 PUT: api/cliente/{id}
     [HttpPut("{id:int}")]
     public async Task<ActionResult> Update(int id, [FromBody] UpdateClienteCommand command, CancellationToken cancellationToken)
     {
@@ -81,9 +76,8 @@ public class ClienteController(IMediator mediator, AuthenticateUserUseCase authU
         return NoContent();
     }
 
-    // 🔹 DELETE: api/cliente/{id}
     [HttpDelete("{id:int}")]
-    public async Task<ActionResult> Delete(Guid id, CancellationToken cancellationToken)
+    public async Task<ActionResult> Delete(int id, CancellationToken cancellationToken)
     {
         var success = await _mediator.Send(new DeleteClienteCommand(id), cancellationToken);
         if (!success) return NotFound();

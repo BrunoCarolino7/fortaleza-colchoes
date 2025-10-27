@@ -4,23 +4,22 @@ using FortalezaSystem.Domain.Enuns;
 namespace FortalezaSystem.Application.UseCases.Cliente.Dtos;
 
 public record ClienteDto(
-    int Id,
-    string Nome,
-    string Filiacao,
-    DateOnly DataNascimento,
-    string EstadoCivil,
-    string Nacionalidade,
-    string Naturalidade,
+    int? Id,
+    string? Nome,
+    string? Filiacao,
+    DateOnly? DataNascimento,
+    string? EstadoCivil,
+    string? Nacionalidade,
+    string? Naturalidade,
+    string? Email,
+    string? Telefone,
     DocumentoDto? Documento,
     DadosProfissionaisDto? DadosProfissionais,
     ConjugeDto? Conjuge,
     InformacoesPagamentoDto? Pagamento,
-    AssinaturaDto? Assinatura,
-    ICollection<EnderecoDto>? Enderecos,
-    ICollection<ReferenciaDto>? Referencias
-)
+    ICollection<EnderecoDto>? Enderecos)
 {
-    public static ClienteDto ConvertToDto(Clientes entity)
+    public static ClienteDto ConvertToDto(Clientes? entity)
     {
         if (entity == null) return null!;
 
@@ -32,18 +31,20 @@ public record ClienteDto(
             entity.EstadoCivil,
             entity.Nacionalidade,
             entity.Naturalidade,
-            entity.Documento != null ? new DocumentoDto(entity.Documento.CPF, entity.Documento.RG) : null,
+            entity.Email,
+            entity.Telefone,
+            entity.Documento != null ? new DocumentoDto(entity.Documento.CPF!, entity.Documento.RG!) : null,
             entity.DadosProfissionais != null
                 ? new DadosProfissionaisDto(
                     entity.DadosProfissionais.Empresa,
-                    entity.DadosProfissionais.EmpregoAnterior,
                     entity.DadosProfissionais.Telefone,
                     entity.DadosProfissionais.Salario,
+                    entity.DadosProfissionais.Profissao,
                     entity.DadosProfissionais.EnderecoEmpresa != null
                         ? new EnderecoDto(
+                            entity.DadosProfissionais.EnderecoEmpresa.Numero,
                             entity.DadosProfissionais.EnderecoEmpresa.Logradouro,
                             entity.DadosProfissionais.EnderecoEmpresa.Bairro,
-                            entity.DadosProfissionais.EnderecoEmpresa.Jardim,
                             entity.DadosProfissionais.EnderecoEmpresa.Localizacao,
                             entity.DadosProfissionais.EnderecoEmpresa.Cidade,
                             entity.DadosProfissionais.EnderecoEmpresa.Estado,
@@ -78,78 +79,62 @@ public record ClienteDto(
                     )).ToList()
                 )
                 : null,
-            entity.Assinatura != null ? new AssinaturaDto(entity.Assinatura.AssinaturaCliente) : null,
+
             entity.Enderecos?.Select(e => new EnderecoDto(
+                e.Numero,
                 e.Logradouro,
                 e.Bairro,
-                e.Jardim,
                 e.Localizacao,
                 e.Cidade,
                 e.Estado,
                 e.CEP
-            )).ToList(),
-            entity.Referencias?.Select(r => new ReferenciaDto(
-                r.Nome,
-                r.Endereco != null ? new EnderecoDto(
-                    r.Endereco.Logradouro,
-                    r.Endereco.Bairro,
-                    r.Endereco.Jardim,
-                    r.Endereco.Localizacao,
-                    r.Endereco.Cidade,
-                    r.Endereco.Estado,
-                    r.Endereco.CEP
-                ) : null
             )).ToList()
         );
     }
 }
 
-public record DocumentoDto(string CPF, string RG);
+public record DocumentoDto(string? CPF, string? RG);
 
 public record EnderecoDto(
-    string Logradouro,
-    string Bairro,
-    string Jardim,
-    string Localizacao,
-    string Cidade,
-    string Estado,
-    string CEP
+    string? Numero,
+    string? Logradouro,
+    string? Bairro,
+    string? Localizacao,
+    string? Cidade,
+    string? Estado,
+    string? CEP
 );
 
-public record ReferenciaDto(string Nome, EnderecoDto? Endereco);
-
 public record DadosProfissionaisDto(
-    string Empresa,
-    string EmpregoAnterior,
-    string Telefone,
-    decimal Salario,
-    EnderecoDto EnderecoEmpresa
+    string? Empresa,
+    string? Telefone,
+    decimal? Salario,
+    string? Profissao,
+    EnderecoDto? EnderecoEmpresa
 );
 
 public record ConjugeDto(
-    string Nome,
+    string? Nome,
     DateOnly? DataNascimento,
-    string Naturalidade,
-    string LocalDeTrabalho,
+    string? Naturalidade,
+    string? LocalDeTrabalho,
     DocumentoDto? Documento
 );
 
 public record InformacoesPagamentoDto(
-    decimal ValorTotal,
-    decimal Sinal,
-    DateTime DataInicio,
-    int NumeroParcelas,
-    decimal AReceber,
-    decimal TotalPago,
-    decimal TotalCancelado,
+    decimal? ValorTotal,
+    decimal? Sinal,
+    DateTime? DataInicio,
+    int? NumeroParcelas,
+    decimal? AReceber,
+    decimal? TotalPago,
+    decimal? TotalCancelado,
     ICollection<ParcelaDto>? Parcelas
 );
 
 public record ParcelaDto(
-    int Numero,
-    decimal Valor,
-    DateTime Vencimento,
-    EStatusPagamento StatusPagamento
+    int? Numero,
+    decimal? Valor,
+    DateTime? Vencimento,
+    EStatusPagamento? StatusPagamento
 );
-
-public record AssinaturaDto(string AssinaturaCliente);

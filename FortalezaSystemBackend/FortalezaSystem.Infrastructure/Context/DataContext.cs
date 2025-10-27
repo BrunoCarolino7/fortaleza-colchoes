@@ -12,12 +12,11 @@ public class DataContext(DbContextOptions<DataContext> options) : DbContext(opti
     public DbSet<Documento> Documentos { get; set; }
     public DbSet<DadosProfissionais> DadosProfissionais { get; set; }
     public DbSet<Conjuge> Conjuges { get; set; }
-    public DbSet<Referencia> Referencias { get; set; }
     public DbSet<InformacoesPagamento> InformacoesPagamento { get; set; }
     public DbSet<Parcela> Parcelas { get; set; }
-    public DbSet<Assinatura> Assinaturas { get; set; }
     public DbSet<Estoque> Estoque { get; set; }
     public DbSet<FortalezaUser> FortalezaUser { get; set; }
+    public DbSet<Pedidos> Pedidos { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -25,7 +24,6 @@ public class DataContext(DbContextOptions<DataContext> options) : DbContext(opti
 
         modelBuilder.HasDefaultSchema("fortaleza");
 
-        // Configuração global para decimal
         foreach (var property in modelBuilder.Model.GetEntityTypes()
                      .SelectMany(t => t.GetProperties())
                      .Where(p => p.ClrType == typeof(decimal)))
@@ -34,7 +32,6 @@ public class DataContext(DbContextOptions<DataContext> options) : DbContext(opti
             property.SetScale(2);
         }
 
-        // Conversão global para DateOnly -> date
         var dateOnlyConverter = new ValueConverter<DateOnly, DateTime>(
             d => d.ToDateTime(TimeOnly.MinValue),
             d => DateOnly.FromDateTime(d)
@@ -55,33 +52,28 @@ public class DataContext(DbContextOptions<DataContext> options) : DbContext(opti
             }
         }
 
-        // Cliente
         modelBuilder.Entity<Clientes>(builder =>
         {
             builder.ToTable("Clientes");
             builder.HasKey(c => c.Id);
 
-            builder.Property(c => c.Nome).HasMaxLength(150).IsRequired();
+            builder.Property(c => c.Nome).HasMaxLength(150);
             builder.Property(c => c.Filiacao).HasMaxLength(150);
             builder.Property(c => c.Nacionalidade).HasMaxLength(50);
             builder.Property(c => c.Naturalidade).HasMaxLength(50);
             builder.Property(c => c.EstadoCivil).HasMaxLength(30);
+            builder.Property(c => c.Email).HasMaxLength(30); ;
+            builder.Property(c => c.Telefone).HasMaxLength(30);
+            builder.Property(c => c.Status).HasDefaultValue(true);
 
             builder.HasMany(c => c.Enderecos)
                    .WithOne(e => e.Cliente)
                    .HasForeignKey(e => e.ClienteId)
-                   .IsRequired(false)
-                   .OnDelete(DeleteBehavior.Cascade);
-
-            builder.HasMany(c => c.Referencias)
-                   .WithOne(r => r.Cliente)
-                   .HasForeignKey(r => r.ClienteId)
                    .OnDelete(DeleteBehavior.Cascade);
 
             builder.HasOne(c => c.Documento)
                    .WithOne(d => d.Cliente)
                    .HasForeignKey<Documento>(d => d.ClienteId)
-                   .IsRequired(false)
                    .OnDelete(DeleteBehavior.Cascade);
 
             builder.HasOne(c => c.DadosProfissionais)
@@ -99,31 +91,36 @@ public class DataContext(DbContextOptions<DataContext> options) : DbContext(opti
                    .HasForeignKey<InformacoesPagamento>(p => p.ClienteId)
                    .OnDelete(DeleteBehavior.Cascade);
 
-            builder.HasOne(c => c.Assinatura)
-                   .WithOne(a => a.Cliente)
-                   .HasForeignKey<Assinatura>(a => a.ClienteId)
-                   .OnDelete(DeleteBehavior.Cascade);
-
             builder.HasOne(c => c.FortalezaUser)
                  .WithOne(a => a.Cliente)
                  .HasForeignKey<FortalezaUser>(a => a.ClienteId)
                  .OnDelete(DeleteBehavior.Cascade);
+
+            builder.HasMany(c => c.Estoque)
+                .WithOne(es => es.Cliente)
+                .HasForeignKey(es => es.ClienteId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            builder.HasMany(c => c.Pedidos)
+                .WithOne(es => es.Cliente)
+                .HasForeignKey(es => es.ClienteId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
 
-        // Endereco
+
         modelBuilder.Entity<Endereco>(builder =>
         {
             builder.ToTable("Enderecos");
             builder.HasKey(e => e.Id);
 
             builder.Property(e => e.Logradouro).HasMaxLength(200);
+            builder.Property(e => e.Numero).HasMaxLength(10);
             builder.Property(e => e.Bairro).HasMaxLength(100);
-            builder.Property(e => e.Jardim).HasMaxLength(100);
             builder.Property(e => e.CEP).HasMaxLength(20);
             builder.Property(e => e.Localizacao).HasMaxLength(100);
             builder.Property(e => e.Cidade).HasMaxLength(100);
             builder.Property(e => e.Estado).HasMaxLength(2);
-            builder.Property(e => e.ClienteId).IsRequired(false);
+            builder.Property(e => e.ClienteId);
         });
 
         modelBuilder.Entity<FortalezaUser>(builder =>
@@ -131,28 +128,28 @@ public class DataContext(DbContextOptions<DataContext> options) : DbContext(opti
             builder.ToTable("FortalezaUser");
             builder.HasKey(d => d.Id);
 
-            builder.Property(d => d.Usuario).HasMaxLength(20).IsRequired();
-            builder.Property(d => d.SenhaHash).HasMaxLength(50).IsRequired();
+            builder.Property(d => d.Usuario).HasMaxLength(20);
+            builder.Property(d => d.SenhaHash).HasMaxLength(50);
         });
 
-        // Documento
         modelBuilder.Entity<Documento>(builder =>
         {
             builder.ToTable("Documentos");
             builder.HasKey(d => d.Id);
 
             builder.Property(d => d.RG).HasMaxLength(20);
-            builder.Property(d => d.CPF).HasMaxLength(14).IsRequired();
+            builder.Property(d => d.CPF).HasMaxLength(14);
         });
 
-        // Dados Profissionais
         modelBuilder.Entity<DadosProfissionais>(builder =>
         {
             builder.ToTable("DadosProfissionais");
             builder.HasKey(dp => dp.Id);
 
+            builder.Property(dp => dp.Id)
+                   .ValueGeneratedOnAdd();
+
             builder.Property(dp => dp.Empresa).HasMaxLength(150);
-            builder.Property(dp => dp.EmpregoAnterior).HasMaxLength(150);
             builder.Property(dp => dp.Telefone).HasMaxLength(20);
             builder.Property(dp => dp.Salario).HasColumnType("decimal(18,2)");
 
@@ -162,7 +159,6 @@ public class DataContext(DbContextOptions<DataContext> options) : DbContext(opti
                    .OnDelete(DeleteBehavior.Restrict);
         });
 
-        // Conjuge
         modelBuilder.Entity<Conjuge>(builder =>
         {
             builder.ToTable("Conjuges");
@@ -178,30 +174,15 @@ public class DataContext(DbContextOptions<DataContext> options) : DbContext(opti
                    .OnDelete(DeleteBehavior.Restrict);
         });
 
-        // Referencia
-        modelBuilder.Entity<Referencia>(builder =>
-        {
-            builder.ToTable("Referencias");
-            builder.HasKey(r => r.Id);
-
-            builder.Property(r => r.Nome).HasMaxLength(150);
-
-            builder.HasOne(r => r.Endereco)
-                   .WithMany()
-                   .HasForeignKey(r => r.EnderecoId)
-                   .OnDelete(DeleteBehavior.Restrict);
-        });
-
-        // InformacoesPagamento
         modelBuilder.Entity<InformacoesPagamento>(builder =>
         {
             builder.ToTable("InformacoesPagamento");
             builder.HasKey(p => p.Id);
 
-            builder.Property(p => p.ValorTotal).HasColumnType("decimal(18,2)").IsRequired();
-            builder.Property(p => p.Sinal).HasColumnType("decimal(18,2)").IsRequired();
-            builder.Property(p => p.DataInicio).IsRequired();
-            builder.Property(p => p.NumeroParcelas).IsRequired();
+            builder.Property(p => p.ValorTotal).HasColumnType("decimal(18,2)");
+            builder.Property(p => p.Sinal).HasColumnType("decimal(18,2)");
+            builder.Property(p => p.DataInicio);
+            builder.Property(p => p.NumeroParcelas);
 
             builder.HasMany(p => p.Parcelas)
                    .WithOne(pa => pa.InformacoesPagamento)
@@ -209,35 +190,35 @@ public class DataContext(DbContextOptions<DataContext> options) : DbContext(opti
                    .OnDelete(DeleteBehavior.Cascade);
         });
 
-        // Parcela
         modelBuilder.Entity<Parcela>(builder =>
         {
             builder.ToTable("Parcelas");
             builder.HasKey(p => p.Id);
 
-            builder.Property(p => p.Numero).IsRequired();
-            builder.Property(p => p.Valor).HasColumnType("decimal(18,2)").IsRequired();
-            builder.Property(p => p.Vencimento).IsRequired();
+            builder.Property(p => p.Numero);
+            builder.Property(p => p.Valor).HasColumnType("decimal(18,2)");
+            builder.Property(p => p.Vencimento);
 
             builder.Property(p => p.StatusPagamento)
                    .HasConversion<int>()
-                   .IsRequired()
                    .HasDefaultValue(EStatusPagamento.Pendente);
-        });
-
-        // Assinatura
-        modelBuilder.Entity<Assinatura>(builder =>
-        {
-            builder.ToTable("Assinaturas");
-            builder.HasKey(a => a.Id);
-
-            builder.Property(a => a.AssinaturaCliente).HasMaxLength(200);
         });
 
         modelBuilder.Entity<Estoque>(builder =>
         {
             builder.ToTable("Estoque");
             builder.HasKey(a => a.Id);
+        });
+
+        modelBuilder.Entity<Pedidos>(builder =>
+        {
+            builder.ToTable("Pedidos");
+            builder.HasKey(a => a.Id);
+
+            builder.HasOne(p => p.InformacoesPagamento)
+                   .WithOne(ip => ip.Pedido)
+                   .HasForeignKey<Pedidos>(d => d.InformacoesPagamentoId)
+                   .OnDelete(DeleteBehavior.Restrict);
         });
     }
 }

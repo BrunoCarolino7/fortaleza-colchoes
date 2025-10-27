@@ -2,24 +2,37 @@
 
 public class DadosProfissionais : BaseEntity
 {
-    private DadosProfissionais() { }
-    public DadosProfissionais(string empresa, string empregoAnterior, string telefone, decimal salario, Endereco endereco)
+    public DadosProfissionais() { }
+    public DadosProfissionais(string? empresa, string? telefone, decimal? salario, Endereco? endereco, string? profissao)
     {
         Empresa = empresa;
-        EmpregoAnterior = empregoAnterior;
         Telefone = telefone;
         Salario = salario;
         EnderecoEmpresa = endereco;
+        Profissao = profissao;
     }
 
-    public string EmpregoAnterior { get; set; }
-    public string Empresa { get; set; }
-    public string Telefone { get; set; }
-    public decimal Salario { get; set; }
+    public string? Empresa { get; set; }
+    public string? Profissao { get; set; }
+    public string? Telefone { get; set; }
+    public decimal? Salario { get; set; }
 
-    public int ClienteId { get; set; }
-    public Clientes Cliente { get; set; }
+    public int? ClienteId { get; set; }
+    public Clientes? Cliente { get; set; }
 
     public int? EnderecoEmpresaId { get; set; }
-    public Endereco EnderecoEmpresa { get; set; }
+    public Endereco? EnderecoEmpresa { get; set; }
+
+    public void Atualizar(
+    string? empresa,
+    string? telefone,
+    decimal? salario,
+    string? profissao)
+    {
+        if (empresa is not null) Empresa = empresa;
+        if (telefone is not null) Telefone = telefone;
+        if (salario is not null) Salario = salario;
+        if (profissao is not null) Profissao = profissao;
+    }
+
 }

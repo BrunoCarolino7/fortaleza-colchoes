@@ -19,9 +19,7 @@ public class ClienteRepository(DataContext dataContext) : IClienteRepository
             .Include(c => c.DadosProfissionais)!.ThenInclude(dp => dp!.EnderecoEmpresa)
             .Include(c => c.Conjuge)!.ThenInclude(conj => conj!.Documento)
             .Include(c => c.Pagamento)!.ThenInclude(p => p!.Parcelas)
-            .Include(c => c.Assinatura)
             .Include(c => c.Enderecos)
-            .Include(c => c.Referencias)!.ThenInclude(r => r.Endereco)
             .AsSplitQuery()
             .FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
 
@@ -35,37 +33,38 @@ public class ClienteRepository(DataContext dataContext) : IClienteRepository
             cliente.EstadoCivil,
             cliente.Nacionalidade,
             cliente.Naturalidade,
-
+            cliente.Telefone,
+            cliente.Email,
             cliente.Documento != null
-                ? new Documento(cliente.Documento.CPF, cliente.Documento.RG)
+                ? new Documento(cliente.Documento.CPF!, cliente.Documento.RG!)
                 : null,
 
             cliente.DadosProfissionais != null
                 ? new DadosProfissionais(
                     cliente.DadosProfissionais.Empresa,
-                    cliente.DadosProfissionais.EmpregoAnterior,
                     cliente.DadosProfissionais.Telefone,
                     cliente.DadosProfissionais.Salario,
                     new Endereco(
+                        cliente.DadosProfissionais.EnderecoEmpresa!.Numero,
                         cliente.DadosProfissionais.EnderecoEmpresa.Logradouro,
                         cliente.DadosProfissionais.EnderecoEmpresa.Bairro,
-                        cliente.DadosProfissionais.EnderecoEmpresa.Jardim,
                         cliente.DadosProfissionais.EnderecoEmpresa.Localizacao,
                         cliente.DadosProfissionais.EnderecoEmpresa.Cidade,
                         cliente.DadosProfissionais.EnderecoEmpresa.Estado,
                         cliente.DadosProfissionais.EnderecoEmpresa.CEP
-                    )
+                    ),
+                    cliente.DadosProfissionais.Profissao
                 )
                 : null,
 
             cliente.Conjuge != null
                 ? new Conjuge(
-                    cliente.Conjuge.Nome,
+                    cliente.Conjuge.Nome!,
                     cliente.Conjuge.DataNascimento,
-                    cliente.Conjuge.Naturalidade,
-                    cliente.Conjuge.LocalDeTrabalho,
+                    cliente.Conjuge.Naturalidade!,
+                    cliente.Conjuge.LocalDeTrabalho!,
                     cliente.Conjuge.Documento != null
-                        ? new Documento(cliente.Conjuge.Documento.CPF, cliente.Conjuge.Documento.RG)
+                        ? new Documento(cliente.Conjuge.Documento.CPF!, cliente.Conjuge.Documento.RG!)
                         : null
                 )
                 : null,
@@ -85,34 +84,25 @@ public class ClienteRepository(DataContext dataContext) : IClienteRepository
                 )
                 : null,
 
-            cliente.Assinatura != null
-                ? new Assinatura(cliente.Assinatura.AssinaturaCliente)
-                : null,
-
             cliente.Enderecos?.Select(e => new Endereco(
+                e.Numero,
                 e.Logradouro,
                 e.Bairro,
-                e.Jardim,
                 e.Localizacao,
                 e.Cidade,
                 e.Estado,
                 e.CEP
             )).ToList(),
 
-            cliente.Referencias?.Select(r => new Referencia(
-                r.Nome,
-                r.Endereco != null
-                    ? new Endereco(
-                        r.Endereco.Logradouro,
-                        r.Endereco.Bairro,
-                        r.Endereco.Jardim,
-                        r.Endereco.Localizacao,
-                        r.Endereco.Cidade,
-                        r.Endereco.Estado,
-                        r.Endereco.CEP
-                    )
-                    : null
-            )).ToList()
+            cliente.Estoque?.Select(es =>
+                Estoque.Criar(
+                    es.Nome,
+                    es.Categoria,
+                    es.Tamanho,
+                    es.Preco,
+                    es.Quantidade
+                )
+            ).ToList()!
         );
 
         typeof(ClientEntity)
@@ -126,10 +116,10 @@ public class ClienteRepository(DataContext dataContext) : IClienteRepository
     {
         var totalClientes = await _dataContext.Clientes.CountAsync(cancellationToken);
 
-        var clientes = await _dataContext.Clientes
+        var clientes = await _dataContext.Clientes!
             .AsNoTracking()
             .Include(c => c.Documento)
-            .Include(c => c.Referencias).ThenInclude(r => r.Endereco)
+            .Include(c => c.Enderecos)
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
             .ToListAsync(cancellationToken);

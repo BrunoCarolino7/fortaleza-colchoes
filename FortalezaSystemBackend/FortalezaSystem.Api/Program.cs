@@ -85,7 +85,7 @@ builder.Services.AddScoped<ITokenService>(sp => new JwtTokenService(jwtKey!));
 
 var app = builder.Build();
 
-// Criar banco
+
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<DataContext>();

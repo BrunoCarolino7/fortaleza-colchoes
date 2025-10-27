@@ -2,27 +2,23 @@
 using FortalezaSystem.Infrastructure.Context;
 using MediatR;
 using ClientesEntity = FortalezaSystem.Domain.Entities.Clientes;
+using EstoqueEntity = FortalezaSystem.Domain.Entities.Estoque;
 
 namespace FortalezaSystem.Application.UseCases.Cliente.Commands.CreateCliente;
 
-public class CreateClienteHandler : IRequestHandler<CreateClienteCommand, ClientesEntity>
+public class CreateClienteHandler(DataContext context) : IRequestHandler<CreateClienteCommand, ClientesEntity>
 {
-    private readonly DataContext _context;
-
-    public CreateClienteHandler(DataContext context)
-    {
-        _context = context;
-    }
+    private readonly DataContext _context = context;
 
     public async Task<ClientesEntity> Handle(CreateClienteCommand request, CancellationToken cancellationToken)
     {
-        var documento = new Documento(request.CPF, request.RG);
+        var documento = new Documento(request.CPF!, request.RG!);
 
         var enderecos = request.Enderecos?.Select(e =>
             new Endereco(
+                e.Numero,
                 e.Logradouro,
                 e.Bairro,
-                e.Jardim,
                 e.Localizacao,
                 e.Cidade,
                 e.Estado,
@@ -34,46 +30,29 @@ public class CreateClienteHandler : IRequestHandler<CreateClienteCommand, Client
             ? null
             : new DadosProfissionais(
                 request.DadosProfissionais.Empresa,
-                request.DadosProfissionais.EmpregoAnterior,
                 request.DadosProfissionais.Telefone,
                 request.DadosProfissionais.Salario,
                 new Endereco(
+                    request.DadosProfissionais.EnderecoEmpresa!.Numero,
                     request.DadosProfissionais.EnderecoEmpresa.Logradouro,
                     request.DadosProfissionais.EnderecoEmpresa.Bairro,
-                    request.DadosProfissionais.EnderecoEmpresa.Jardim,
                     request.DadosProfissionais.EnderecoEmpresa.Localizacao,
                     request.DadosProfissionais.EnderecoEmpresa.Cidade,
                     request.DadosProfissionais.EnderecoEmpresa.Estado,
                     request.DadosProfissionais.EnderecoEmpresa.CEP
-                )
+                ),
+                request.DadosProfissionais.Profissao
             );
 
         var conjuge = request.Conjuge is null
             ? null
             : new Conjuge(
-                request.Conjuge.Nome,
+                request.Conjuge.Nome!,
                 request.Conjuge.DataNascimento,
-                request.Conjuge.Naturalidade,
-                request.Conjuge.LocalDeTrabalho,
-                new Documento(request.Conjuge.CPF, request.Conjuge.RG)
+                request.Conjuge.Naturalidade!,
+                request.Conjuge.LocalDeTrabalho!,
+                new Documento(request.Conjuge.CPF!, request.Conjuge.RG!)
             );
-
-        var referencias = request.Referencias?.Select(r =>
-            new Referencia(
-                r.Nome,
-                new Endereco(
-                    r.Endereco.Logradouro,
-                    r.Endereco.Bairro,
-                    r.Endereco.Jardim,
-                    r.Endereco.Localizacao,
-                    r.Endereco.Cidade,
-                    r.Endereco.Estado,
-                    r.Endereco.CEP
-                )
-            )
-        ).ToList();
-
-        var assinatura = new Assinatura(request.Assinatura);
 
         var pagamento = request.Pagamento is null
             ? null
@@ -87,6 +66,16 @@ public class CreateClienteHandler : IRequestHandler<CreateClienteCommand, Client
                 ).ToList()
             );
 
+        var estoque = request.Estoque?.Select(es =>
+            EstoqueEntity.Criar(
+                es.Nome,
+                es.Categoria,
+                es.Tamanho,
+                es.Preco,
+                es.Quantidade
+            )
+        ).ToList();
+
         var cliente = new ClientesEntity(
             request.Nome,
             request.Filiacao,
@@ -94,14 +83,15 @@ public class CreateClienteHandler : IRequestHandler<CreateClienteCommand, Client
             request.EstadoCivil,
             request.Nacionalidade,
             request.Naturalidade,
+            request.Email,
+            request.Telefone,
             documento,
             dadosProfissionais,
             conjuge,
             pagamento,
-            assinatura,
             enderecos,
-            referencias
-        );
+            estoque!
+         );
 
         _context.Clientes.Add(cliente);
         await _context.SaveChangesAsync(cancellationToken);
