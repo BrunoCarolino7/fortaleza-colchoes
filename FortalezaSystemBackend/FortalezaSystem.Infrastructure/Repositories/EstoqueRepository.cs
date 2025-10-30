@@ -32,12 +32,13 @@ public class EstoqueRepository(DataContext dataContext) : IEstoqueRepository
         if (page <= 0) page = 1;
         if (pageSize <= 0) pageSize = 10;
 
-        var query = _dataContext.Estoque.AsNoTracking();
+        var query = _dataContext.Estoque.Where(x => x.Status).AsNoTracking();
 
         var totalItems = await query.CountAsync();
 
         var data = await query
             .OrderBy(e => e.Nome)
+            .Where(x => x.Status)
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
             .ToListAsync();

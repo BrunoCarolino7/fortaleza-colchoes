@@ -10,6 +10,6 @@ public class GetNumberCustomersHandler(DataContext context) : IRequestHandler<Ge
 
     public async Task<int> Handle(GetNumberCustomersQuery request, CancellationToken cancellationToken)
     {
-        return await _context.Clientes.CountAsync(cancellationToken);
+        return await _context.Clientes.Where(x => x.Status).CountAsync(cancellationToken);
     }
 }

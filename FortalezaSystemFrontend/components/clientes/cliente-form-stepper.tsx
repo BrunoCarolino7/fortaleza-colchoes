@@ -1,16 +1,18 @@
 "use client"
 
 import type React from "react"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Stepper } from "@/components/ui/stepper"
-import { PlusIcon, Trash2Icon, ChevronLeftIcon, ChevronRightIcon } from "@/components/icons"
+import { PlusIcon, ChevronLeftIcon, ChevronRightIcon, AlertCircle } from "@/components/icons"
 import { PatternFormat } from "react-number-format"
+import { NumericFormat } from "react-number-format"
 
 import type {
   Cliente,
@@ -19,11 +21,13 @@ import type {
   Conjuge,
   Referencia,
   Pagamento,
-  Parcela,
   ProdutoSelecionado,
 } from "@/lib/data/clientes"
 import { EnderecoForm } from "./endereco-form"
 import { ProdutoSeletor } from "./produto-seletor"
+import { PagamentoForm } from "./pagamento-form"
+import { validateClienteForm, validateClienteFormFinal } from "@/lib/validations/cliente-validation"
+import { ClienteResumoFinal } from "./cliente-resumo-final"
 
 interface ClienteFormStepperProps {
   cliente?: Cliente
@@ -36,14 +40,15 @@ const steps = [
   { id: "enderecos", title: "Endereços", description: "Endereços" },
   { id: "profissional", title: "Profissional", description: "Dados profissionais" },
   { id: "conjuge", title: "Cônjuge", description: "Dados do cônjuge" },
-  { id: "referencias", title: "Referências", description: "Referências pessoais" },
   { id: "produtos", title: "Produtos", description: "Selecionar produtos" },
   { id: "pagamento", title: "Pagamento", description: "Informações de pagamento" },
+  { id: "resumo", title: "Resumo", description: "Revisar dados" },
 ]
 
 export function ClienteFormStepper({ cliente, onSubmit, isSubmitting = false }: ClienteFormStepperProps) {
   const router = useRouter()
   const [currentStep, setCurrentStep] = useState(1)
+  const [validationErrors, setValidationErrors] = useState<any[]>([])
 
   const [formData, setFormData] = useState({
     nome: cliente?.nome || "",
@@ -67,45 +72,82 @@ export function ClienteFormStepper({ cliente, onSubmit, isSubmitting = false }: 
         cep: "",
         localizacao: "",
         cidade: "",
-        estado: "",
+        estado: "SP",
       },
     ],
   )
 
-  const [dadosProfissionais, setDadosProfissionais] = useState<DadosProfissionais | undefined>(
-    cliente?.dadosProfissionais || {
-      empresa: "",
-      empregoAnterior: "",
-      telefone: "",
-      salario: 0,
-      enderecoEmpresa: {
-        logradouro: "",
-        numero: "",
-        bairro: "",
-        cep: "",
-        localizacao: "",
-        cidade: "",
-        estado: "",
-      },
+  const [dadosProfissionais, setDadosProfissionais] = useState<DadosProfissionais>({
+    empresa: "",
+    telefone: "",
+    profissao: "",
+    salario: 0,
+    enderecoEmpresa: {
+      logradouro: "",
+      numero: "",
+      bairro: "",
+      cep: "",
+      localizacao: "",
+      cidade: "",
+      estado: "SP",
     },
-  )
+  })
 
   const [conjuge, setConjuge] = useState<Conjuge | undefined>(cliente?.conjuge)
   const [referencias, setReferencias] = useState<Referencia[]>(cliente?.referencias || [])
-  const [produtosSelecionados, setProdutosSelecionados] = useState<ProdutoSelecionado[]>(
-    cliente?.produtosSelecionados || [],
-  )
+  const [produtosSelecionados, setProdutosSelecionados] = useState<ProdutoSelecionado[]>(cliente?.estoque || [])
   const [pagamento, setPagamento] = useState<Pagamento | undefined>(cliente?.pagamento)
+
+  useEffect(() => {
+    if (produtosSelecionados.length === 0) return
+
+    const total = produtosSelecionados.reduce((acc, produto) => acc + produto.preco * produto.quantidadeSelecionada, 0)
+
+    setPagamento((prev) => {
+      if (prev && prev.valorTotal === total) return prev
+
+      return {
+        valorTotal: total,
+        sinal: 0,
+        dataInicio: new Date().toISOString().substring(0, 10),
+        numeroParcelas: 1,
+        parcelas: [],
+      }
+    })
+  }, [produtosSelecionados])
+
+  useEffect(() => {
+    setTimeout(() => {
+      window.scrollTo({ top: 0, behavior: "smooth" })
+      document.documentElement.scrollTop = 0
+    }, 0)
+  }, [currentStep])
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
+
+    const validation = validateClienteFormFinal(
+      formData,
+      enderecos,
+      dadosProfissionais,
+      conjuge,
+      produtosSelecionados,
+      pagamento,
+    )
+
+    if (!validation.isValid) {
+      setValidationErrors(validation.errors)
+      return
+    }
+
+    setValidationErrors([])
     onSubmit({
       ...formData,
       enderecos,
       dadosProfissionais,
       conjuge,
       referencias,
-      produtosSelecionados,
+      estoque: produtosSelecionados,
       pagamento,
     })
   }
@@ -127,7 +169,7 @@ export function ClienteFormStepper({ cliente, onSubmit, isSubmitting = false }: 
         cep: "",
         localizacao: "",
         cidade: "",
-        estado: "",
+        estado: "SP",
       },
     ])
   }
@@ -142,101 +184,57 @@ export function ClienteFormStepper({ cliente, onSubmit, isSubmitting = false }: 
     setEnderecos(newEnderecos)
   }
 
-  const addReferencia = () => {
-    setReferencias([
-      ...referencias,
-      {
-        nome: "",
-        endereco: {
-          logradouro: "",
-          numero: "",
-          bairro: "",
-          cep: "",
-          localizacao: "",
-          cidade: "",
-          estado: "",
-        },
-      },
-    ])
-  }
+  const nextStep = () => {
+    const validation = validateClienteForm(
+      formData,
+      enderecos,
+      dadosProfissionais,
+      conjuge,
+      produtosSelecionados,
+      pagamento,
+      currentStep,
+    )
 
-  const removeReferencia = (index: number) => {
-    setReferencias(referencias.filter((_, i) => i !== index))
-  }
-
-  const updateReferencia = (index: number, referencia: Referencia) => {
-    const newReferencias = [...referencias]
-    newReferencias[index] = referencia
-    setReferencias(newReferencias)
-  }
-
-  const calcularTotalProdutos = () => {
-    return produtosSelecionados.reduce((acc, produto) => acc + produto.preco, 0)
-  }
-
-  const gerarParcelas = () => {
-    if (!pagamento) return
-
-    const { valorTotal, sinal, numeroParcelas, dataInicio } = pagamento
-    const valorRestante = valorTotal - sinal
-    const valorParcela = valorRestante / numeroParcelas
-
-    const parcelas: Parcela[] = []
-    const dataBase = new Date(dataInicio)
-
-    for (let i = 1; i <= numeroParcelas; i++) {
-      const dataVencimento = new Date(dataBase)
-      dataVencimento.setMonth(dataVencimento.getMonth() + i)
-
-      parcelas.push({
-        numero: i,
-        valor: Number(valorParcela.toFixed(2)),
-        vencimento: dataVencimento.toString(),
-        statusPagamento: 0,
-      })
+    if (!validation.isValid) {
+      setValidationErrors(validation.errors)
+      return
     }
 
-    setPagamento((prev) => ({
-      ...prev!,
-      parcelas,
-    }))
-  }
-
-  const updateParcela = (index: number, parcela: Parcela) => {
-    if (!pagamento) return
-    const newParcelas = [...pagamento.parcelas]
-    newParcelas[index] = parcela
-    setPagamento((prev) => ({
-      ...prev!,
-      parcelas: newParcelas,
-    }))
-  }
-
-  const removeParcela = (index: number) => {
-    if (!pagamento) return
-    setPagamento((prev) => ({
-      ...prev!,
-      parcelas: prev!.parcelas.filter((_, i) => i !== index),
-    }))
-  }
-
-  const nextStep = () => {
+    setValidationErrors([])
     if (currentStep < steps.length) {
       setCurrentStep(currentStep + 1)
     }
   }
 
   const prevStep = () => {
+    setValidationErrors([])
     if (currentStep > 1) {
       setCurrentStep(currentStep - 1)
     }
   }
 
   const isLastStep = currentStep === steps.length
+  const isSixthStep = currentStep === 6
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       <Stepper steps={steps} currentStep={currentStep} />
+
+      {validationErrors.length > 0 && (
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>
+            <div className="space-y-1">
+              <p className="font-semibold">Por favor, corrija os seguintes erros:</p>
+              <ul className="list-disc list-inside text-sm">
+                {validationErrors.map((error, idx) => (
+                  <li key={idx}>{error.message}</li>
+                ))}
+              </ul>
+            </div>
+          </AlertDescription>
+        </Alert>
+      )}
 
       {currentStep === 1 && (
         <Card>
@@ -387,7 +385,19 @@ export function ClienteFormStepper({ cliente, onSubmit, isSubmitting = false }: 
           <CardContent className="space-y-4">
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-2">
-                <Label>Empresa Atual</Label>
+                <Label>Profissão</Label>
+                <Input
+                  value={dadosProfissionais?.profissao || ""}
+                  onChange={(e) =>
+                    setDadosProfissionais((prev) => ({
+                      ...prev!,
+                      profissao: e.target.value,
+                    }))
+                  }
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Empresa Atual (Opcional)</Label>
                 <Input
                   value={dadosProfissionais?.empresa || ""}
                   onChange={(e) =>
@@ -400,29 +410,37 @@ export function ClienteFormStepper({ cliente, onSubmit, isSubmitting = false }: 
               </div>
               <div className="space-y-2">
                 <Label>Telefone Comercial</Label>
-                <Input
+                <PatternFormat
+                  format="(##) #####-####"
                   value={dadosProfissionais?.telefone || ""}
-                  onChange={(e) =>
+                  onValueChange={(values) =>
                     setDadosProfissionais((prev) => ({
                       ...prev!,
-                      telefone: e.target.value,
+                      telefone: values.value,
                     }))
                   }
+                  customInput={Input}
+                  placeholder="(11) 99999-9999"
                 />
               </div>
               <div className="space-y-2">
-                <Label>Salário</Label>
-                <Input
-                  type="number"
-                  step="0.01"
-                  value={dadosProfissionais?.salario || 0}
-                  onChange={(e) =>
-                    setDadosProfissionais((prev) => ({
-                      ...prev!,
-                      salario: Number.parseFloat(e.target.value),
-                    }))
-                  }
-                />
+                <Label>Salário (Opcional)</Label>
+                {dadosProfissionais && (
+                  <NumericFormat
+                    value={dadosProfissionais?.salario ?? 0}
+                    onValueChange={(values) =>
+                      setDadosProfissionais((prev) => ({
+                        ...prev!,
+                        salario: values.floatValue || 0,
+                      }))
+                    }
+                    thousandSeparator="."
+                    decimalSeparator=","
+                    prefix="R$ "
+                    customInput={Input}
+                    placeholder="R$ 0,00"
+                  />
+                )}
               </div>
             </div>
             {dadosProfissionais && (
@@ -524,26 +542,32 @@ export function ClienteFormStepper({ cliente, onSubmit, isSubmitting = false }: 
                   </div>
                   <div className="space-y-2">
                     <Label>CPF</Label>
-                    <Input
+                    <PatternFormat
+                      format="###.###.###-##"
                       value={conjuge.cpf}
-                      onChange={(e) =>
+                      onValueChange={(values) =>
                         setConjuge((prev) => ({
                           ...prev!,
-                          cpf: e.target.value,
+                          cpf: values.value,
                         }))
                       }
+                      customInput={Input}
+                      placeholder="000.000.000-00"
                     />
                   </div>
                   <div className="space-y-2">
                     <Label>RG</Label>
-                    <Input
+                    <PatternFormat
+                      format="##.###.###-#"
                       value={conjuge.rg}
-                      onChange={(e) =>
+                      onValueChange={(values) =>
                         setConjuge((prev) => ({
                           ...prev!,
-                          rg: e.target.value,
+                          rg: values.value,
                         }))
                       }
+                      customInput={Input}
+                      placeholder="00.000.000-0"
                     />
                   </div>
                 </div>
@@ -562,238 +586,26 @@ export function ClienteFormStepper({ cliente, onSubmit, isSubmitting = false }: 
       )}
 
       {currentStep === 5 && (
-        <div className="space-y-4">
-          {referencias.map((referencia, index) => (
-            <Card key={index}>
-              <CardHeader className="flex flex-row items-center justify-between">
-                <CardTitle className="text-base">Referência {index + 1}</CardTitle>
-                <Button type="button" variant="ghost" size="icon" onClick={() => removeReferencia(index)}>
-                  <Trash2Icon className="h-4 w-4" />
-                </Button>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Label>Nome</Label>
-                  <Input
-                    value={referencia.nome}
-                    onChange={(e) =>
-                      updateReferencia(index, {
-                        ...referencia,
-                        nome: e.target.value,
-                      })
-                    }
-                  />
-                </div>
-                <EnderecoForm
-                  endereco={referencia.endereco}
-                  onChange={(e) =>
-                    updateReferencia(index, {
-                      ...referencia,
-                      endereco: e,
-                    })
-                  }
-                  title="Endereço da Referência"
-                  showRemove={false}
-                />
-              </CardContent>
-            </Card>
-          ))}
-          <Button type="button" variant="outline" onClick={addReferencia} className="w-full sm:w-auto bg-transparent">
-            <PlusIcon className="mr-2 h-4 w-4" />
-            Adicionar Referência
-          </Button>
-        </div>
-      )}
-
-      {currentStep === 6 && (
         <ProdutoSeletor produtosSelecionados={produtosSelecionados} onChange={setProdutosSelecionados} />
       )}
 
+      {currentStep === 6 && (
+        <PagamentoForm
+          pagamento={pagamento ?? { valorTotal: 0, sinal: 0, dataInicio: "", numeroParcelas: 1, parcelas: [] }}
+          produtosSelecionados={produtosSelecionados}
+          onChange={setPagamento}
+        />
+      )}
+
       {currentStep === 7 && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Informações de Pagamento</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {!pagamento ? (
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() =>
-                  setPagamento({
-                    valorTotal: calcularTotalProdutos(),
-                    sinal: 0,
-                    dataInicio: "",
-                    numeroParcelas: 1,
-                    parcelas: [],
-                  })
-                }
-                className="w-full sm:w-auto"
-              >
-                <PlusIcon className="mr-2 h-4 w-4" />
-                Adicionar Informações de Pagamento
-              </Button>
-            ) : (
-              <>
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <div className="space-y-2">
-                    <Label>Valor Total</Label>
-                    <Input
-                      type="number"
-                      step="0.01"
-                      value={pagamento.valorTotal}
-                      onChange={(e) =>
-                        setPagamento((prev) => ({
-                          ...prev!,
-                          valorTotal: Number.parseFloat(e.target.value),
-                        }))
-                      }
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Sinal (Entrada)</Label>
-                    <Input
-                      type="number"
-                      step="0.01"
-                      value={pagamento.sinal}
-                      onChange={(e) =>
-                        setPagamento((prev) => ({
-                          ...prev!,
-                          sinal: Number.parseFloat(e.target.value),
-                        }))
-                      }
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Data de Início</Label>
-                    <Input
-                      type="date"
-                      value={pagamento.dataInicio}
-                      onChange={(e) =>
-                        setPagamento((prev) => ({
-                          ...prev!,
-                          dataInicio: e.target.value,
-                        }))
-                      }
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Número de Parcelas</Label>
-                    <Input
-                      type="number"
-                      min="1"
-                      value={pagamento.numeroParcelas}
-                      onChange={(e) =>
-                        setPagamento((prev) => ({
-                          ...prev!,
-                          numeroParcelas: Number.parseInt(e.target.value),
-                        }))
-                      }
-                    />
-                  </div>
-                </div>
-
-                <div className="flex flex-col gap-2 sm:flex-row">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={gerarParcelas}
-                    className="w-full sm:w-auto bg-transparent"
-                  >
-                    Gerar Parcelas Automaticamente
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => setPagamento(undefined)}
-                    className="w-full sm:w-auto"
-                  >
-                    Remover Pagamento
-                  </Button>
-                </div>
-
-                {pagamento.parcelas.length > 0 && (
-                  <div className="space-y-4 pt-4">
-                    <h3 className="font-semibold text-base sm:text-lg">Parcelas</h3>
-                    <div className="space-y-3">
-                      {pagamento.parcelas.map((parcela, index) => (
-                        <Card key={index}>
-                          <CardContent className="pt-6">
-                            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5 items-end">
-                              <div className="space-y-2">
-                                <Label>Número</Label>
-                                <Input
-                                  type="number"
-                                  value={parcela.numero}
-                                  onChange={(e) =>
-                                    updateParcela(index, {
-                                      ...parcela,
-                                      numero: Number.parseInt(e.target.value),
-                                    })
-                                  }
-                                />
-                              </div>
-                              <div className="space-y-2">
-                                <Label>Valor</Label>
-                                <Input
-                                  type="number"
-                                  step="0.01"
-                                  value={parcela.valor}
-                                  onChange={(e) =>
-                                    updateParcela(index, {
-                                      ...parcela,
-                                      valor: Number.parseFloat(e.target.value),
-                                    })
-                                  }
-                                />
-                              </div>
-                              <div className="space-y-2">
-                                <Label>Vencimento</Label>
-                                <Input
-                                  type="date"
-                                  value={parcela.vencimento ? parcela.vencimento : ""}
-                                  onChange={(e) =>
-                                    updateParcela(index, {
-                                      ...parcela,
-                                      vencimento: e.target.value,
-                                    })
-                                  }
-                                />
-                              </div>
-                              <div className="space-y-2">
-                                <Label>Status</Label>
-                                <Select
-                                  value={parcela.statusPagamento.toString()}
-                                  onValueChange={(value) =>
-                                    updateParcela(index, {
-                                      ...parcela,
-                                      statusPagamento: Number.parseInt(value),
-                                    })
-                                  }
-                                >
-                                  <SelectTrigger>
-                                    <SelectValue />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    <SelectItem value="0">Pendente</SelectItem>
-                                    <SelectItem value="1">Pago</SelectItem>
-                                  </SelectContent>
-                                </Select>
-                              </div>
-                              <Button type="button" variant="ghost" size="icon" onClick={() => removeParcela(index)}>
-                                <Trash2Icon className="h-4 w-4" />
-                              </Button>
-                            </div>
-                          </CardContent>
-                        </Card>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </>
-            )}
-          </CardContent>
-        </Card>
+        <ClienteResumoFinal
+          formData={formData}
+          enderecos={enderecos}
+          dadosProfissionais={dadosProfissionais}
+          conjuge={conjuge}
+          produtosSelecionados={produtosSelecionados}
+          pagamento={pagamento}
+        />
       )}
 
       <div className="flex flex-col gap-2 sm:flex-row sm:justify-between">
@@ -809,7 +621,12 @@ export function ClienteFormStepper({ cliente, onSubmit, isSubmitting = false }: 
             Anterior
           </Button>
           {!isLastStep && (
-            <Button type="button" onClick={nextStep} disabled={isSubmitting} className="w-full sm:w-auto">
+            <Button
+              type="button"
+              onClick={nextStep}
+              disabled={isSubmitting || (currentStep === 5 && produtosSelecionados.length === 0)}
+              className="w-full sm:w-auto"
+            >
               Próximo
               <ChevronRightIcon className="ml-2 h-4 w-4" />
             </Button>
@@ -826,7 +643,7 @@ export function ClienteFormStepper({ cliente, onSubmit, isSubmitting = false }: 
             Cancelar
           </Button>
           {isLastStep && (
-            <Button type="submit" disabled={isSubmitting} className="w-full sm:w-auto">
+            <Button type="submit" disabled={isSubmitting || validationErrors.length > 0} className="w-full sm:w-auto">
               {isSubmitting ? "Salvando..." : "Salvar Cliente"}
             </Button>
           )}

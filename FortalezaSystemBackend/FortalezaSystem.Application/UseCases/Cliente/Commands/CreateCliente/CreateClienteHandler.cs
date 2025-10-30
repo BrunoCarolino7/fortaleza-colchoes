@@ -2,18 +2,22 @@
 using FortalezaSystem.Infrastructure.Context;
 using MediatR;
 using ClientesEntity = FortalezaSystem.Domain.Entities.Clientes;
-using EstoqueEntity = FortalezaSystem.Domain.Entities.Estoque;
+using ItemPedidoEntity = FortalezaSystem.Domain.Entities.ItemPedido;
+using PedidosEntity = FortalezaSystem.Domain.Entities.Pedidos;
 
 namespace FortalezaSystem.Application.UseCases.Cliente.Commands.CreateCliente;
 
-public class CreateClienteHandler(DataContext context) : IRequestHandler<CreateClienteCommand, ClientesEntity>
+public class CreateClienteHandler(DataContext context)
+    : IRequestHandler<CreateClienteCommand, ClientesEntity>
 {
     private readonly DataContext _context = context;
 
     public async Task<ClientesEntity> Handle(CreateClienteCommand request, CancellationToken cancellationToken)
     {
+        // Documento
         var documento = new Documento(request.CPF!, request.RG!);
 
+        // Endereços
         var enderecos = request.Enderecos?.Select(e =>
             new Endereco(
                 e.Numero,
@@ -26,6 +30,7 @@ public class CreateClienteHandler(DataContext context) : IRequestHandler<CreateC
             )
         ).ToList();
 
+        // Dados Profissionais
         var dadosProfissionais = request.DadosProfissionais is null
             ? null
             : new DadosProfissionais(
@@ -44,6 +49,7 @@ public class CreateClienteHandler(DataContext context) : IRequestHandler<CreateC
                 request.DadosProfissionais.Profissao
             );
 
+        // Cônjuge
         var conjuge = request.Conjuge is null
             ? null
             : new Conjuge(
@@ -54,28 +60,6 @@ public class CreateClienteHandler(DataContext context) : IRequestHandler<CreateC
                 new Documento(request.Conjuge.CPF!, request.Conjuge.RG!)
             );
 
-        var pagamento = request.Pagamento is null
-            ? null
-            : new InformacoesPagamento(
-                request.Pagamento.ValorTotal,
-                request.Pagamento.Sinal,
-                request.Pagamento.DataInicio,
-                request.Pagamento.NumeroParcelas,
-                request.Pagamento.Parcelas?.Select(p =>
-                    new Parcela(p.Numero, p.Valor, p.Vencimento, p.StatusPagamento)
-                ).ToList()
-            );
-
-        var estoque = request.Estoque?.Select(es =>
-            EstoqueEntity.Criar(
-                es.Nome,
-                es.Categoria,
-                es.Tamanho,
-                es.Preco,
-                es.Quantidade
-            )
-        ).ToList();
-
         var cliente = new ClientesEntity(
             request.Nome,
             request.Filiacao,
@@ -83,18 +67,69 @@ public class CreateClienteHandler(DataContext context) : IRequestHandler<CreateC
             request.EstadoCivil,
             request.Nacionalidade,
             request.Naturalidade,
-            request.Email,
             request.Telefone,
+            request.Email,
             documento,
             dadosProfissionais,
             conjuge,
-            pagamento,
             enderecos,
-            estoque!
-         );
+            pedidos: []
+        );
 
         _context.Clientes.Add(cliente);
         await _context.SaveChangesAsync(cancellationToken);
+
+
+        if (request.Pedidos != null && request.Pedidos.Any())
+        {
+            foreach (var pedidoRequest in request.Pedidos)
+            {
+                var pedido = new PedidosEntity(cliente.Id, []);
+
+                foreach (var itemRequest in pedidoRequest.Itens)
+                {
+                    var informacoesPagamento = itemRequest.Pagamento is null
+                        ? null
+                        : new InformacoesPagamento(
+                            itemRequest.Pagamento.ValorTotal,
+                            itemRequest.Pagamento.Sinal,
+                            itemRequest.Pagamento.DataInicio,
+                            itemRequest.Pagamento.NumeroParcelas,
+                            itemRequest.Pagamento.Parcelas?.Select(p =>
+                                new Parcela(p.Numero, p.Valor, p.Vencimento, p.StatusPagamento)
+                            ).ToList()
+                        );
+
+                    var itemPedido = new ItemPedidoEntity(
+                        pedido.Id,
+                        itemRequest.ProdutoId,
+                        itemRequest.Quantidade,
+                        itemRequest.PrecoUnitario
+                    );
+
+                    if (informacoesPagamento is not null)
+                    {
+                        typeof(InformacoesPagamento)
+                            .GetProperty(nameof(InformacoesPagamento.ItemPedidoId))!
+                            .SetValue(informacoesPagamento, itemPedido.Id);
+                        typeof(InformacoesPagamento)
+                            .GetProperty(nameof(InformacoesPagamento.ItemPedido))!
+                            .SetValue(informacoesPagamento, itemPedido);
+
+                        typeof(ItemPedidoEntity)
+                            .GetProperty(nameof(ItemPedidoEntity.InformacoesPagamento))!
+                            .SetValue(itemPedido, informacoesPagamento);
+                    }
+
+                    pedido.Itens.Add(itemPedido);
+                }
+
+                cliente.Pedidos!.Add(pedido);
+            }
+
+            _context.Update(cliente);
+            await _context.SaveChangesAsync(cancellationToken);
+        }
 
         return cliente;
     }

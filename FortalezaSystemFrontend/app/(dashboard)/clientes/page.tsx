@@ -51,6 +51,7 @@ interface Cliente {
 
 export default function ClientesPage() {
   const [clientes, setClientes] = useState<Cliente[]>([])
+  const [isLoading, setIsLoading] = useState(false)
   const [filteredClientes, setFilteredClientes] = useState<Cliente[]>([])
   const [totalPages, setTotalPages] = useState(1)
   const [currentPage, setCurrentPage] = useState(1)
@@ -129,9 +130,17 @@ export default function ClientesPage() {
 
   const handleDelete = async () => {
     if (!selectedId) return
-    console.log(`Cliente ${selectedId} excluído (simulação)`)
-    setOpenDialog(false)
-    fetchClientes()
+
+    setIsLoading(true)
+    try {
+      await axios.delete(`https://localhost:7195/api/cliente/${selectedId}`)
+      await fetchClientes()
+      setOpenDialog(false)
+    } catch (error) {
+      console.error("Erro ao excluir cliente:", error)
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   const paginatedClientes = filteredClientes.slice(
@@ -361,17 +370,17 @@ export default function ClientesPage() {
           <AlertDialogHeader>
             <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
             <AlertDialogDescription>
-              Tem certeza que deseja excluir este cliente? Essa ação não pode ser
-              desfeita.
+              Tem certeza que deseja excluir{" "}
+              <strong>
+                {clientes.find((c) => c.id === selectedId)?.nome ?? "este cliente"}
+              </strong>
+              ? Essa ação não pode ser desfeita.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleDelete}
-              className="bg-red-600 hover:bg-red-700 text-white"
-            >
-              Excluir
+            <AlertDialogAction onClick={handleDelete} className="bg-red-600 hover:bg-red-700 text-white">
+              {isLoading ? "Excluindo..." : "Excluir"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

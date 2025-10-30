@@ -31,9 +31,6 @@ export default function ClienteDetalhesPage({
     error,
   } = useFetch<Cliente>(id ? `https://localhost:7195/api/cliente/${id}` : "", { enabled: !!id })
 
-  console.log(cliente)
-
-  console.log(cliente)
   if (!id || loading) {
     return (
       <div className="flex flex-col">
@@ -145,7 +142,7 @@ export default function ClienteDetalhesPage({
                 </CardContent>
               </Card>
             </TabsContent>
-            
+
             {/* Pedidos */}
             <TabsContent value="pedidos">
               <PedidosTab cliente={cliente} />

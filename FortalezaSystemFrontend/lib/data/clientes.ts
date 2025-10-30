@@ -12,7 +12,7 @@ export interface Endereco {
 export interface DadosProfissionais {
   id?: string
   empresa: string
-  empregoAnterior: string
+  profissao: string
   telefone: string
   salario: number
   enderecoEmpresa: Endereco
@@ -55,12 +55,22 @@ export interface ProdutoSelecionado {
   nome: string
   preco: number
   quantidade: number
+  quantidadeSelecionada: number
 }
 
-export interface ProdutosSelecionados extends Array<ProdutoSelecionado> {}
+export interface Pedido {
+  id: number
+  ClienteId: number
+  InformacoesPagamentoId: number
+  parcelaId: number
+}
+
+export interface ProdutosSelecionados extends Array<ProdutoSelecionado> { }
 
 export interface Cliente {
   id: string
+  rg?: string
+  cpf?: string
   nome: string
   email: string
   telefone: string
@@ -77,7 +87,7 @@ export interface Cliente {
   dadosProfissionais?: DadosProfissionais
   conjuge?: Conjuge
   referencias: Referencia[]
-  produtosSelecionados?: ProdutoSelecionado[]
+  estoque?: ProdutoSelecionado[]
   assinatura?: {
     assinaturaCliente?: string | null
   } | null

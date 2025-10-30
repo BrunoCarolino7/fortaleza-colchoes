@@ -4,5 +4,6 @@ public abstract class BaseEntity
 {
     protected BaseEntity() { }
 
-    public int Id { get; protected set; }
+    public int? Id { get; set; }
+    public bool Status { get; set; }
 }

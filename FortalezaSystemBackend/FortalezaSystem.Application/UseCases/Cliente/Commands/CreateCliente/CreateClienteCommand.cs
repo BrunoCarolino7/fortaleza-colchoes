@@ -2,7 +2,6 @@
 using MediatR;
 using ClientesEntity = FortalezaSystem.Domain.Entities.Clientes;
 
-
 namespace FortalezaSystem.Application.UseCases.Cliente.Commands.CreateCliente;
 
 public record CreateClienteCommand(
@@ -19,11 +18,13 @@ public record CreateClienteCommand(
     List<EnderecoDto>? Enderecos,
     DadosProfissionaisDto? DadosProfissionais,
     ConjugeDto? Conjuge,
-    PagamentoDto? Pagamento,
-    List<EstoqueDto> Estoque
+    List<PedidoDto>? Pedidos
 ) : IRequest<ClientesEntity>;
 
+#region --- Sub DTOs ---
+
 public record EnderecoDto(
+    int Id,
     string? Numero,
     string? Logradouro,
     string? Bairro,
@@ -32,7 +33,6 @@ public record EnderecoDto(
     string? Cidade,
     string? Estado
 );
-
 public record DadosProfissionaisDto(
     string? Empresa,
     string? Telefone,
@@ -50,6 +50,17 @@ public record ConjugeDto(
     string? RG
 );
 
+public record PedidoDto(
+    List<ItemPedidoDto> Itens
+);
+
+public record ItemPedidoDto(
+    int ProdutoId,
+    int Quantidade,
+    decimal PrecoUnitario,
+    PagamentoDto? Pagamento
+);
+
 public record PagamentoDto(
     decimal? ValorTotal,
     decimal? Sinal,
@@ -64,13 +75,4 @@ public record ParcelaDto(
     DateTime? Vencimento,
     EStatusPagamento? StatusPagamento
 );
-
-public record EstoqueDto(
-    int? Id,
-    string? Nome,
-    string? Categoria,
-    string? Tamanho,
-    decimal? Preco,
-    int? Quantidade,
-    EStatusEstoque StatusEstoque
-);
+#endregion

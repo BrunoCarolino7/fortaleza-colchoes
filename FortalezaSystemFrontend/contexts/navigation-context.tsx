@@ -13,10 +13,10 @@ interface NavigationContextType {
 const NavigationContext = createContext<NavigationContextType | undefined>(undefined)
 
 export function NavigationProvider({ children }: { children: ReactNode }) {
-  const [isNavigating, setIsNavigating] = useState(false)
-  const [progress, setProgress] = useState(0)
   const pathname = usePathname()
   const searchParams = useSearchParams()
+  const [isNavigating, setIsNavigating] = useState(false)
+  const [progress, setProgress] = useState(0)
 
   const startNavigation = useCallback(() => {
     setIsNavigating(true)

@@ -6,9 +6,8 @@ import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Loader2 } from "lucide-react" // 👈 ícone do spinner
+import { Loader2 } from "lucide-react"
 import type { Produto } from "@/lib/data/estoque"
 
 interface ProdutoFormProps {
@@ -26,8 +25,7 @@ export function ProdutoForm({ produto, onSubmit }: ProdutoFormProps) {
     preco: produto?.preco || 0,
     quantidade: produto?.quantidade || 0,
     estoqueMinimo: produto?.estoqueMinimo || 10,
-    fornecedor: produto?.fornecedor || "",
-    descricao: produto?.descricao || "",
+    fornecedor: produto?.fornecedor || ""    
   })
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -82,7 +80,7 @@ export function ProdutoForm({ produto, onSubmit }: ProdutoFormProps) {
             </div>
             <div className="space-y-2">
               <Label htmlFor="fornecedor">Fornecedor</Label>
-              <Input id="fornecedor" name="fornecedor" value={formData.fornecedor} onChange={handleChange} required />
+              <Input id="fornecedor" name="fornecedor" value={formData.fornecedor} onChange={handleChange}  />
             </div>
             <div className="space-y-2">
               <Label htmlFor="quantidade">Quantidade em Estoque</Label>
@@ -105,10 +103,6 @@ export function ProdutoForm({ produto, onSubmit }: ProdutoFormProps) {
                 onChange={handleChange}
                 required
               />
-            </div>
-            <div className="space-y-2 md:col-span-2">
-              <Label htmlFor="descricao">Descrição</Label>
-              <Textarea id="descricao" name="descricao" value={formData.descricao} onChange={handleChange} rows={3} />
             </div>
           </div>
 

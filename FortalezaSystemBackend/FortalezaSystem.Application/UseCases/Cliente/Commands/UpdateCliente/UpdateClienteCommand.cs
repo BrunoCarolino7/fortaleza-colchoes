@@ -1,5 +1,4 @@
-﻿using FortalezaSystem.Application.UseCases.Cliente.Commands.CreateCliente;
-using MediatR;
+﻿using MediatR;
 
 namespace FortalezaSystem.Application.UseCases.Cliente.Commands.UpdateCliente;
 
@@ -15,9 +14,8 @@ public record UpdateClienteCommand(
     string? RG,
     string? Email,
     string? Telefone,
-    List<EnderecoDto>? Enderecos,
-    DadosProfissionaisDto? DadosProfissionais,
-    ConjugeDto? Conjuge,
-    PagamentoDto? Pagamento,
-    List<EstoqueDto>? Estoque
+    List<FortalezaSystem.Application.UseCases.Cliente.Dtos.EnderecoDto>? Enderecos,
+    FortalezaSystem.Application.UseCases.Cliente.Dtos.DadosProfissionaisDto? DadosProfissionais,
+    FortalezaSystem.Application.UseCases.Cliente.Dtos.ConjugeDto? Conjuge,
+    List<FortalezaSystem.Application.UseCases.Cliente.Dtos.PedidoDto>? Pedidos
 ) : IRequest<bool>;

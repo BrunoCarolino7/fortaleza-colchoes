@@ -20,14 +20,16 @@ public class GetAllEstoqueHandler : IRequestHandler<GetAllEstoqueQuery, EstoqueA
 
     public async Task<EstoqueAllDto> Handle(GetAllEstoqueQuery request, CancellationToken cancellationToken)
     {
-        var page = 1;
-        var pageSize = 1000;
+        var page = request.Page <= 0 ? 1 : request.Page;
+        var pageSize = request.PageSize <= 0 ? 10 : request.PageSize;
+
         var (data, totalItems) = await _estoqueRepository.ObterEstoqueTotal(page, pageSize);
+
         var query = _dataContext.Estoque.AsNoTracking();
 
         var baixo = await query.CountAsync(x => x.StatusEstoque == EStatusEstoque.BaixoEstoque);
-        var sem = await query.CountAsync(x => x.Quantidade == 0);
-        var emEstoque = await query.CountAsync(x => x.Quantidade > 10);
+        var sem = await query.CountAsync(x => x.StatusEstoque == EStatusEstoque.SemEstoque);
+        var emEstoque = await query.CountAsync(x => x.StatusEstoque == EStatusEstoque.EmEstoque);
 
         var dtoList = data.Select(e => new EstoqueItemDto
         {

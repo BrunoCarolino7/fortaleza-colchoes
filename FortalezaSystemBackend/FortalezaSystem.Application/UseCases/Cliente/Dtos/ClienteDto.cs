@@ -16,12 +16,14 @@ public record ClienteDto(
     DocumentoDto? Documento,
     DadosProfissionaisDto? DadosProfissionais,
     ConjugeDto? Conjuge,
-    InformacoesPagamentoDto? Pagamento,
-    ICollection<EnderecoDto>? Enderecos)
+    ICollection<EnderecoDto>? Enderecos,
+    ICollection<PedidoDto>? Pedidos
+)
 {
     public static ClienteDto ConvertToDto(Clientes? entity)
     {
-        if (entity == null) return null!;
+        if (entity is null)
+            return null!;
 
         return new ClienteDto(
             entity.Id,
@@ -33,15 +35,22 @@ public record ClienteDto(
             entity.Naturalidade,
             entity.Email,
             entity.Telefone,
-            entity.Documento != null ? new DocumentoDto(entity.Documento.CPF!, entity.Documento.RG!) : null,
-            entity.DadosProfissionais != null
+
+            // Documento
+            entity.Documento is not null
+                ? new DocumentoDto(entity.Documento.CPF, entity.Documento.RG)
+                : null,
+
+            // Dados Profissionais
+            entity.DadosProfissionais is not null
                 ? new DadosProfissionaisDto(
                     entity.DadosProfissionais.Empresa,
                     entity.DadosProfissionais.Telefone,
                     entity.DadosProfissionais.Salario,
                     entity.DadosProfissionais.Profissao,
-                    entity.DadosProfissionais.EnderecoEmpresa != null
+                    entity.DadosProfissionais.EnderecoEmpresa is not null
                         ? new EnderecoDto(
+                            entity.DadosProfissionais.EnderecoEmpresa.Id,
                             entity.DadosProfissionais.EnderecoEmpresa.Numero,
                             entity.DadosProfissionais.EnderecoEmpresa.Logradouro,
                             entity.DadosProfissionais.EnderecoEmpresa.Bairro,
@@ -50,52 +59,75 @@ public record ClienteDto(
                             entity.DadosProfissionais.EnderecoEmpresa.Estado,
                             entity.DadosProfissionais.EnderecoEmpresa.CEP
                         )
-                        : null!
+                        : null
                 )
                 : null,
-            entity.Conjuge != null
+
+            // Cônjuge
+            entity.Conjuge is not null
                 ? new ConjugeDto(
                     entity.Conjuge.Nome,
                     entity.Conjuge.DataNascimento,
                     entity.Conjuge.Naturalidade,
                     entity.Conjuge.LocalDeTrabalho,
-                    entity.Conjuge.Documento != null ? new DocumentoDto(entity.Conjuge.Documento.CPF, entity.Conjuge.Documento.RG) : null
-                )
-                : null,
-            entity.Pagamento != null
-                ? new InformacoesPagamentoDto(
-                    entity.Pagamento.ValorTotal,
-                    entity.Pagamento.Sinal,
-                    entity.Pagamento.DataInicio,
-                    entity.Pagamento.NumeroParcelas,
-                    entity.Pagamento.AReceber,
-                    entity.Pagamento.TotalPago,
-                    entity.Pagamento.TotalCancelado,
-                    entity.Pagamento.Parcelas?.Select(p => new ParcelaDto(
-                        p.Numero,
-                        p.Valor,
-                        p.Vencimento,
-                        p.StatusPagamento
-                    )).ToList()
+                    entity.Conjuge.Documento is not null
+                        ? new DocumentoDto(entity.Conjuge.Documento.CPF, entity.Conjuge.Documento.RG)
+                        : null
                 )
                 : null,
 
-            entity.Enderecos?.Select(e => new EnderecoDto(
-                e.Numero,
-                e.Logradouro,
-                e.Bairro,
-                e.Localizacao,
-                e.Cidade,
-                e.Estado,
-                e.CEP
-            )).ToList()
+            // Endereços
+            entity.Enderecos?
+                .Select(e => new EnderecoDto(
+                    e.Id,
+                    e.Numero,
+                    e.Logradouro,
+                    e.Bairro,
+                    e.Localizacao,
+                    e.Cidade,
+                    e.Estado,
+                    e.CEP
+                ))
+                .ToList(),
+
+                entity.Pedidos?
+                    .Select(p => new PedidoDto(
+                        p.Id,
+                        p.ClienteId,
+                        p.Itens?.Select(i => new ItemPedidoDto(
+                            i.Id,
+                            i.ProdutoId,
+                            i.Quantidade,
+                            i.PrecoUnitario,
+                            i.InformacoesPagamento is not null
+                                ? new PagamentoDto(
+                                    i.InformacoesPagamento.Id,
+                                    i.InformacoesPagamento.ValorTotal,
+                                    i.InformacoesPagamento.Sinal,
+                                    i.InformacoesPagamento.DataInicio,
+                                    i.InformacoesPagamento.NumeroParcelas,
+                                    i.InformacoesPagamento.Parcelas?
+                                        .Select(pa => new ParcelaDto(
+                                            pa.Numero,
+                                            pa.Valor,
+                                            pa.Vencimento,
+                                            pa.StatusPagamento
+                                        ))
+                                        .ToList()
+                                )
+                                : null
+                        ))
+                        .ToList()
+                    ))
+                    .ToList()
+
         );
     }
 }
-
 public record DocumentoDto(string? CPF, string? RG);
 
 public record EnderecoDto(
+    int? Id,
     string? Numero,
     string? Logradouro,
     string? Bairro,
@@ -121,14 +153,26 @@ public record ConjugeDto(
     DocumentoDto? Documento
 );
 
-public record InformacoesPagamentoDto(
+public record PedidoDto(
+    int? Id,
+    int? ClienteId,
+    ICollection<ItemPedidoDto>? Itens
+);
+
+public record ItemPedidoDto(
+    int? Id,
+    int? ProdutoId,
+    int Quantidade,
+    decimal PrecoUnitario,
+    PagamentoDto? Pagamento
+);
+
+public record PagamentoDto(
+    int? Id,
     decimal? ValorTotal,
     decimal? Sinal,
     DateTime? DataInicio,
     int? NumeroParcelas,
-    decimal? AReceber,
-    decimal? TotalPago,
-    decimal? TotalCancelado,
     ICollection<ParcelaDto>? Parcelas
 );
 

@@ -22,17 +22,13 @@ public class Estoque : BaseEntity
     public decimal? Preco { get; private set; }
     public int? Quantidade { get; private set; }
     public EStatusEstoque? StatusEstoque { get; private set; }
-    public int? ClienteId { get; private set; }
-    public Clientes? Cliente { get; private set; }
 
     public static Estoque Criar(string? nome, string? categoria, string? tamanho, decimal? preco, int? quantidade)
     {
         if (string.IsNullOrWhiteSpace(nome))
             throw new ArgumentException("Nome do produto é obrigatório.");
-
         if (preco <= 0)
             throw new ArgumentException("Preço inválido.");
-
         if (quantidade < 0)
             throw new ArgumentException("Quantidade inválida.");
 
@@ -40,13 +36,7 @@ public class Estoque : BaseEntity
         return new Estoque(nome, categoria, tamanho, preco, quantidade, status);
     }
 
-    public void Atualizar(
-        string? nome,
-        string? categoria,
-        string? tamanho,
-        decimal? preco,
-        int? quantidade,
-        EStatusEstoque? status = null)
+    public void Atualizar(string? nome, string? categoria, string? tamanho, decimal? preco, int? quantidade, EStatusEstoque? status = null)
     {
         if (nome is not null) Nome = nome;
         if (categoria is not null) Categoria = categoria;
@@ -58,7 +48,6 @@ public class Estoque : BaseEntity
             Quantidade = quantidade;
             StatusEstoque = ValidaEstoque(quantidade);
         }
-
         else if (status is not null)
         {
             StatusEstoque = status.Value;
@@ -66,13 +55,11 @@ public class Estoque : BaseEntity
     }
 
     public static EStatusEstoque ValidaEstoque(int? quantidade)
-    {
-        return quantidade switch
+        => quantidade switch
         {
             > 10 => EStatusEstoque.EmEstoque,
             > 0 and <= 10 => EStatusEstoque.BaixoEstoque,
             0 => EStatusEstoque.SemEstoque,
             _ => throw new ArgumentOutOfRangeException(nameof(quantidade))
         };
-    }
 }

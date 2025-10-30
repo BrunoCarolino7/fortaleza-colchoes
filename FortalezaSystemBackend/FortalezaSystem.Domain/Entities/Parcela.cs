@@ -19,8 +19,8 @@ public class Parcela : BaseEntity
     public DateTime? Vencimento { get; private set; }
     public EStatusPagamento? StatusPagamento { get; private set; }
 
-    public int? InformacoesPagamentoId { get; private set; }
-    public InformacoesPagamento? InformacoesPagamento { get; private set; } = default!;
+    public int InformacoesPagamentoId { get; private set; }
+    public InformacoesPagamento InformacoesPagamento { get; private set; } = null!;
 
     public void MarcarComoPago()
     {
@@ -37,14 +37,16 @@ public class Parcela : BaseEntity
 
         StatusPagamento = EStatusPagamento.Cancelado;
     }
-    public void Atualizar(
-    decimal? valor,
-    DateTime? vencimento,
-    EStatusPagamento? statusPagamento)
+
+    public void AtualizarStatus(EStatusPagamento? statusPagamento)
+    {
+        if (statusPagamento is not null) StatusPagamento = statusPagamento.Value;
+    }
+
+    public void Atualizar(decimal? valor, DateTime? vencimento, EStatusPagamento? statusPagamento)
     {
         if (valor is not null) Valor = valor;
         if (vencimento is not null) Vencimento = vencimento;
         if (statusPagamento is not null) StatusPagamento = statusPagamento.Value;
     }
-
 }

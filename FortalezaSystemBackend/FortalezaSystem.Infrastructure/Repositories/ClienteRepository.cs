@@ -15,11 +15,18 @@ public class ClienteRepository(DataContext dataContext) : IClienteRepository
     {
         var cliente = await _dataContext.Clientes
             .AsNoTracking()
+            .Where(c => c.Status)
             .Include(c => c.Documento)
             .Include(c => c.DadosProfissionais)!.ThenInclude(dp => dp!.EnderecoEmpresa)
             .Include(c => c.Conjuge)!.ThenInclude(conj => conj!.Documento)
-            .Include(c => c.Pagamento)!.ThenInclude(p => p!.Parcelas)
             .Include(c => c.Enderecos)
+            .Include(c => c.Pedidos)!
+                .ThenInclude(p => p.Itens)!
+                    .ThenInclude(i => i.Produto)
+            .Include(c => c.Pedidos)!
+                .ThenInclude(p => p.Itens)!
+                    .ThenInclude(i => i.InformacoesPagamento)!
+                        .ThenInclude(ip => ip.Parcelas)
             .AsSplitQuery()
             .FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
 
@@ -36,27 +43,28 @@ public class ClienteRepository(DataContext dataContext) : IClienteRepository
             cliente.Telefone,
             cliente.Email,
             cliente.Documento != null
-                ? new Documento(cliente.Documento.CPF!, cliente.Documento.RG!)
+                ? new Documento(cliente.Documento.RG!, cliente.Documento.CPF!)
                 : null,
-
             cliente.DadosProfissionais != null
                 ? new DadosProfissionais(
                     cliente.DadosProfissionais.Empresa,
                     cliente.DadosProfissionais.Telefone,
                     cliente.DadosProfissionais.Salario,
-                    new Endereco(
-                        cliente.DadosProfissionais.EnderecoEmpresa!.Numero,
-                        cliente.DadosProfissionais.EnderecoEmpresa.Logradouro,
-                        cliente.DadosProfissionais.EnderecoEmpresa.Bairro,
-                        cliente.DadosProfissionais.EnderecoEmpresa.Localizacao,
-                        cliente.DadosProfissionais.EnderecoEmpresa.Cidade,
-                        cliente.DadosProfissionais.EnderecoEmpresa.Estado,
-                        cliente.DadosProfissionais.EnderecoEmpresa.CEP
-                    ),
+                    cliente.DadosProfissionais.EnderecoEmpresa != null
+                        ? new Endereco(
+                            cliente.DadosProfissionais.EnderecoEmpresa.Id,
+                            cliente.DadosProfissionais.EnderecoEmpresa.Numero,
+                            cliente.DadosProfissionais.EnderecoEmpresa.Logradouro,
+                            cliente.DadosProfissionais.EnderecoEmpresa.Bairro,
+                            cliente.DadosProfissionais.EnderecoEmpresa.Localizacao,
+                            cliente.DadosProfissionais.EnderecoEmpresa.Cidade,
+                            cliente.DadosProfissionais.EnderecoEmpresa.Estado,
+                            cliente.DadosProfissionais.EnderecoEmpresa.CEP
+                        )
+                        : null,
                     cliente.DadosProfissionais.Profissao
                 )
                 : null,
-
             cliente.Conjuge != null
                 ? new Conjuge(
                     cliente.Conjuge.Nome!,
@@ -64,27 +72,12 @@ public class ClienteRepository(DataContext dataContext) : IClienteRepository
                     cliente.Conjuge.Naturalidade!,
                     cliente.Conjuge.LocalDeTrabalho!,
                     cliente.Conjuge.Documento != null
-                        ? new Documento(cliente.Conjuge.Documento.CPF!, cliente.Conjuge.Documento.RG!)
+                        ? new Documento(cliente.Conjuge.Documento.RG!, cliente.Conjuge.Documento.CPF!)
                         : null
                 )
                 : null,
-
-            cliente.Pagamento != null
-                ? new InformacoesPagamento(
-                    cliente.Pagamento.ValorTotal,
-                    cliente.Pagamento.Sinal,
-                    cliente.Pagamento.DataInicio,
-                    cliente.Pagamento.NumeroParcelas,
-                    cliente.Pagamento.Parcelas?.Select(p => new Parcela(
-                        p.Numero,
-                        p.Valor,
-                        p.Vencimento,
-                        p.StatusPagamento
-                    )).ToList()
-                )
-                : null,
-
             cliente.Enderecos?.Select(e => new Endereco(
+                e.Id,
                 e.Numero,
                 e.Logradouro,
                 e.Bairro,
@@ -93,16 +86,48 @@ public class ClienteRepository(DataContext dataContext) : IClienteRepository
                 e.Estado,
                 e.CEP
             )).ToList(),
+            cliente.Pedidos?.Select(p =>
+            {
+                var itens = p.Itens.Select(i =>
+                {
+                    var informacoesPagamento = i.InformacoesPagamento is not null
+                        ? new InformacoesPagamento(
+                            i.Id,
+                            i.InformacoesPagamento.ValorTotal,
+                            i.InformacoesPagamento.Sinal,
+                            i.InformacoesPagamento.DataInicio,
+                            i.InformacoesPagamento.NumeroParcelas,
+                            i.InformacoesPagamento.Parcelas?.Select(parcela =>
+                                new Parcela(
+                                    parcela.Numero,
+                                    parcela.Valor,
+                                    parcela.Vencimento,
+                                    parcela.StatusPagamento
+                                )
+                            ).ToList()
+                        )
+                        : null;
 
-            cliente.Estoque?.Select(es =>
-                Estoque.Criar(
-                    es.Nome,
-                    es.Categoria,
-                    es.Tamanho,
-                    es.Preco,
-                    es.Quantidade
-                )
-            ).ToList()!
+                    var item = new ItemPedido(
+                        i.Id,
+                        i.PedidoId,
+                        i.ProdutoId,
+                        i.Quantidade,
+                        i.PrecoUnitario
+                    );
+
+                    if (informacoesPagamento is not null)
+                    {
+                        typeof(ItemPedido)
+                            .GetProperty(nameof(ItemPedido.InformacoesPagamento))!
+                            .SetValue(item, informacoesPagamento);
+                    }
+
+                    return item;
+                }).ToList();
+
+                return new Pedidos(p.ClienteId, itens);
+            }).ToList()
         );
 
         typeof(ClientEntity)
@@ -116,8 +141,9 @@ public class ClienteRepository(DataContext dataContext) : IClienteRepository
     {
         var totalClientes = await _dataContext.Clientes.CountAsync(cancellationToken);
 
-        var clientes = await _dataContext.Clientes!
+        var clientes = await _dataContext.Clientes
             .AsNoTracking()
+            .Where(x => x.Status)
             .Include(c => c.Documento)
             .Include(c => c.Enderecos)
             .Skip((page - 1) * pageSize)
@@ -132,5 +158,4 @@ public class ClienteRepository(DataContext dataContext) : IClienteRepository
             PageSize = pageSize
         };
     }
-
 }

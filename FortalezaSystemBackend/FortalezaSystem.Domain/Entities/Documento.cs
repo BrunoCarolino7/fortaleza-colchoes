@@ -6,10 +6,10 @@ public class Documento : BaseEntity
     {
 
     }
-    public Documento(string rG, string cPF)
+    public Documento(string rg, string cpf)
     {
-        RG = rG;
-        CPF = cPF;
+        RG = rg;
+        CPF = cpf;
     }
 
     public string? RG { get; set; }

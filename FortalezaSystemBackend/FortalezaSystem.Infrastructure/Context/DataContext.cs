@@ -17,6 +17,7 @@ public class DataContext(DbContextOptions<DataContext> options) : DbContext(opti
     public DbSet<Estoque> Estoque { get; set; }
     public DbSet<FortalezaUser> FortalezaUser { get; set; }
     public DbSet<Pedidos> Pedidos { get; set; }
+    public DbSet<ItemPedido> ItensPedido { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -52,6 +53,7 @@ public class DataContext(DbContextOptions<DataContext> options) : DbContext(opti
             }
         }
 
+        // ================== CLIENTE ==================
         modelBuilder.Entity<Clientes>(builder =>
         {
             builder.ToTable("Clientes");
@@ -62,9 +64,8 @@ public class DataContext(DbContextOptions<DataContext> options) : DbContext(opti
             builder.Property(c => c.Nacionalidade).HasMaxLength(50);
             builder.Property(c => c.Naturalidade).HasMaxLength(50);
             builder.Property(c => c.EstadoCivil).HasMaxLength(30);
-            builder.Property(c => c.Email).HasMaxLength(30); ;
+            builder.Property(c => c.Email).HasMaxLength(30);
             builder.Property(c => c.Telefone).HasMaxLength(30);
-            builder.Property(c => c.Status).HasDefaultValue(true);
 
             builder.HasMany(c => c.Enderecos)
                    .WithOne(e => e.Cliente)
@@ -86,32 +87,23 @@ public class DataContext(DbContextOptions<DataContext> options) : DbContext(opti
                    .HasForeignKey<Conjuge>(co => co.ClienteId)
                    .OnDelete(DeleteBehavior.Cascade);
 
-            builder.HasOne(c => c.Pagamento)
-                   .WithOne(p => p.Cliente)
-                   .HasForeignKey<InformacoesPagamento>(p => p.ClienteId)
+            builder.HasOne(c => c.FortalezaUser)
+                   .WithOne(a => a.Cliente)
+                   .HasForeignKey<FortalezaUser>(a => a.ClienteId)
                    .OnDelete(DeleteBehavior.Cascade);
 
-            builder.HasOne(c => c.FortalezaUser)
-                 .WithOne(a => a.Cliente)
-                 .HasForeignKey<FortalezaUser>(a => a.ClienteId)
-                 .OnDelete(DeleteBehavior.Cascade);
-
-            builder.HasMany(c => c.Estoque)
-                .WithOne(es => es.Cliente)
-                .HasForeignKey(es => es.ClienteId)
-                .OnDelete(DeleteBehavior.Cascade);
-
             builder.HasMany(c => c.Pedidos)
-                .WithOne(es => es.Cliente)
-                .HasForeignKey(es => es.ClienteId)
-                .OnDelete(DeleteBehavior.Cascade);
+                   .WithOne(p => p.Cliente)
+                   .HasForeignKey(p => p.ClienteId)
+                   .OnDelete(DeleteBehavior.Cascade);
         });
 
-
+        // ================== ENDERECO ==================
         modelBuilder.Entity<Endereco>(builder =>
         {
             builder.ToTable("Enderecos");
             builder.HasKey(e => e.Id);
+            builder.Property(e => e.Id).ValueGeneratedOnAdd();
 
             builder.Property(e => e.Logradouro).HasMaxLength(200);
             builder.Property(e => e.Numero).HasMaxLength(10);
@@ -120,9 +112,9 @@ public class DataContext(DbContextOptions<DataContext> options) : DbContext(opti
             builder.Property(e => e.Localizacao).HasMaxLength(100);
             builder.Property(e => e.Cidade).HasMaxLength(100);
             builder.Property(e => e.Estado).HasMaxLength(2);
-            builder.Property(e => e.ClienteId);
         });
 
+        // ================== USER ==================
         modelBuilder.Entity<FortalezaUser>(builder =>
         {
             builder.ToTable("FortalezaUser");
@@ -132,6 +124,7 @@ public class DataContext(DbContextOptions<DataContext> options) : DbContext(opti
             builder.Property(d => d.SenhaHash).HasMaxLength(50);
         });
 
+        // ================== DOCUMENTO ==================
         modelBuilder.Entity<Documento>(builder =>
         {
             builder.ToTable("Documentos");
@@ -141,13 +134,11 @@ public class DataContext(DbContextOptions<DataContext> options) : DbContext(opti
             builder.Property(d => d.CPF).HasMaxLength(14);
         });
 
+        // ================== DADOS PROFISSIONAIS ==================
         modelBuilder.Entity<DadosProfissionais>(builder =>
         {
             builder.ToTable("DadosProfissionais");
             builder.HasKey(dp => dp.Id);
-
-            builder.Property(dp => dp.Id)
-                   .ValueGeneratedOnAdd();
 
             builder.Property(dp => dp.Empresa).HasMaxLength(150);
             builder.Property(dp => dp.Telefone).HasMaxLength(20);
@@ -159,6 +150,7 @@ public class DataContext(DbContextOptions<DataContext> options) : DbContext(opti
                    .OnDelete(DeleteBehavior.Restrict);
         });
 
+        // ================== CONJUGE ==================
         modelBuilder.Entity<Conjuge>(builder =>
         {
             builder.ToTable("Conjuges");
@@ -174,6 +166,56 @@ public class DataContext(DbContextOptions<DataContext> options) : DbContext(opti
                    .OnDelete(DeleteBehavior.Restrict);
         });
 
+        // ================== ESTOQUE (PRODUTO) ==================
+        modelBuilder.Entity<Estoque>(builder =>
+        {
+            builder.ToTable("Estoque");
+            builder.HasKey(a => a.Id);
+        });
+
+        // ================== PEDIDO ==================
+        modelBuilder.Entity<Pedidos>(builder =>
+        {
+            builder.ToTable("Pedidos");
+            builder.HasKey(p => p.Id);
+
+            builder.HasOne(p => p.Cliente)
+                   .WithMany(c => c.Pedidos)
+                   .HasForeignKey(p => p.ClienteId)
+                   .OnDelete(DeleteBehavior.Cascade);
+
+            builder.HasMany(p => p.Itens)
+                   .WithOne(i => i.Pedido)
+                   .HasForeignKey(i => i.PedidoId)
+                   .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        // ================== ITEM PEDIDO (NOVO) ==================
+        modelBuilder.Entity<ItemPedido>(builder =>
+        {
+            builder.ToTable("ItensPedido");
+            builder.HasKey(i => i.Id);
+
+            builder.Property(i => i.Quantidade);
+            builder.Property(i => i.PrecoUnitario).HasColumnType("decimal(18,2)");
+
+            builder.HasOne(i => i.Pedido)
+                   .WithMany(p => p.Itens)
+                   .HasForeignKey(i => i.PedidoId)
+                   .OnDelete(DeleteBehavior.Cascade);
+
+            builder.HasOne(i => i.Produto)
+                   .WithMany()                  // se quiser, crie ICollection<ItemPedido> em Estoque
+                   .HasForeignKey(i => i.ProdutoId)
+                   .OnDelete(DeleteBehavior.Restrict);
+
+            builder.HasOne(i => i.InformacoesPagamento)
+                   .WithOne(ip => ip.ItemPedido)
+                   .HasForeignKey<InformacoesPagamento>(ip => ip.ItemPedidoId)
+                   .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        // ================== INFORMACOES PAGAMENTO ==================
         modelBuilder.Entity<InformacoesPagamento>(builder =>
         {
             builder.ToTable("InformacoesPagamento");
@@ -184,12 +226,15 @@ public class DataContext(DbContextOptions<DataContext> options) : DbContext(opti
             builder.Property(p => p.DataInicio);
             builder.Property(p => p.NumeroParcelas);
 
+            builder.HasIndex(p => p.ItemPedidoId).IsUnique();
+
             builder.HasMany(p => p.Parcelas)
                    .WithOne(pa => pa.InformacoesPagamento)
                    .HasForeignKey(pa => pa.InformacoesPagamentoId)
                    .OnDelete(DeleteBehavior.Cascade);
         });
 
+        // ================== PARCELA ==================
         modelBuilder.Entity<Parcela>(builder =>
         {
             builder.ToTable("Parcelas");
@@ -202,23 +247,6 @@ public class DataContext(DbContextOptions<DataContext> options) : DbContext(opti
             builder.Property(p => p.StatusPagamento)
                    .HasConversion<int>()
                    .HasDefaultValue(EStatusPagamento.Pendente);
-        });
-
-        modelBuilder.Entity<Estoque>(builder =>
-        {
-            builder.ToTable("Estoque");
-            builder.HasKey(a => a.Id);
-        });
-
-        modelBuilder.Entity<Pedidos>(builder =>
-        {
-            builder.ToTable("Pedidos");
-            builder.HasKey(a => a.Id);
-
-            builder.HasOne(p => p.InformacoesPagamento)
-                   .WithOne(ip => ip.Pedido)
-                   .HasForeignKey<Pedidos>(d => d.InformacoesPagamentoId)
-                   .OnDelete(DeleteBehavior.Restrict);
         });
     }
 }

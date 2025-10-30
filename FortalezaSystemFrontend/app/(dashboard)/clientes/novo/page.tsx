@@ -11,6 +11,7 @@ export default function NovoClientePage() {
   const router = useRouter()
   const { toast } = useToast()
   const [isSubmitting, setIsSubmitting] = useState(false)
+
   const handleSubmit = async (formData: any) => {
     setIsSubmitting(true)
     try {
@@ -36,11 +37,13 @@ export default function NovoClientePage() {
         dataNascimento: toDateOnly(formData.dataNascimento),
         cpf: formData.cpf,
         rg: formData.rg,
+        email: formData.email,
+        telefone: formData.telefone,
 
         enderecos:
           formData.enderecos?.map((e: any) => ({
-            logradouro: e.logradouro,
             numero: e.numero,
+            logradouro: e.logradouro,
             bairro: e.bairro,
             cep: e.cep,
             localizacao: e.localizacao,
@@ -50,63 +53,59 @@ export default function NovoClientePage() {
 
         dadosProfissionais: formData.dadosProfissionais
           ? {
-              empresa: formData.dadosProfissionais.empresa,
-              empregoAnterior: formData.dadosProfissionais.empregoAnterior,
-              telefone: formData.dadosProfissionais.telefone,
-              salario: formData.dadosProfissionais.salario,
-              enderecoEmpresa: {
-                logradouro: formData.dadosProfissionais.enderecoEmpresa?.logradouro,
-                numero: formData.dadosProfissionais.enderecoEmpresa?.numero,
-                bairro: formData.dadosProfissionais.enderecoEmpresa?.bairro,
-                cep: formData.dadosProfissionais.enderecoEmpresa?.cep,
-                localizacao: formData.dadosProfissionais.enderecoEmpresa?.localizacao,
-                cidade: formData.dadosProfissionais.enderecoEmpresa?.cidade,
-                estado: formData.dadosProfissionais.enderecoEmpresa?.estado,
-              },
-            }
+            empresa: formData.dadosProfissionais.empresa,
+            telefone: formData.dadosProfissionais.telefone,
+            salario: formData.dadosProfissionais.salario,
+            profissao: formData.dadosProfissionais.profissao,
+            enderecoEmpresa: {
+              numero: formData.dadosProfissionais.enderecoEmpresa?.numero,
+              logradouro: formData.dadosProfissionais.enderecoEmpresa?.logradouro,
+              bairro: formData.dadosProfissionais.enderecoEmpresa?.bairro,
+              cep: formData.dadosProfissionais.enderecoEmpresa?.cep,
+              localizacao: formData.dadosProfissionais.enderecoEmpresa?.localizacao,
+              cidade: formData.dadosProfissionais.enderecoEmpresa?.cidade,
+              estado: formData.dadosProfissionais.enderecoEmpresa?.estado,
+            },
+          }
           : null,
 
         conjuge: formData.conjuge
           ? {
-              nome: formData.conjuge.nome,
-              dataNascimento: toDateOnly(formData.conjuge.dataNascimento),
-              naturalidade: formData.conjuge.naturalidade,
-              localDeTrabalho: formData.conjuge.localDeTrabalho,
-              cpf: formData.conjuge.cpf,
-              rg: formData.conjuge.rg,
-            }
+            nome: formData.conjuge.nome,
+            dataNascimento: toDateOnly(formData.conjuge.dataNascimento),
+            naturalidade: formData.conjuge.naturalidade,
+            localDeTrabalho: formData.conjuge.localDeTrabalho,
+            cpf: formData.conjuge.cpf,
+            rg: formData.conjuge.rg,
+          }
           : null,
 
-        referencias:
-          formData.referencias?.map((r: any) => ({
-            nome: r.nome,
-            endereco: {
-              logradouro: r.endereco?.logradouro,
-              numero: r.endereco?.numero,
-              bairro: r.endereco?.bairro,
-              cep: r.endereco?.cep,
-              localizacao: r.endereco?.localizacao,
-              cidade: r.endereco?.cidade,
-              estado: r.endereco?.estado,
-            },
-          })) ?? [],
-
-        produtoSelecionado: formData.produtoSelecionado || null,
-
-        pagamento: formData.pagamento
-          ? {
-              valorTotal: formData.pagamento.valorTotal,
-              sinal: formData.pagamento.sinal,
-              dataInicio: toDateTime(formData.pagamento.dataInicio),
-              numeroParcelas: formData.pagamento.numeroParcelas,
-              parcelas: formData.pagamento.parcelas?.map((p: any) => ({
-                numero: p.numero,
-                valor: p.valor,
-                vencimento: toDateTime(p.vencimento),
-                statusPagamento: p.statusPagamento,
-              })),
-            }
-          : null,
+        pedidos:
+          formData.estoque && formData.estoque.length > 0
+            ? [
+              {
+                itens: formData.estoque.map((produto: any) => ({
+                  produtoId: Number.parseInt(produto.id),
+                  quantidade: produto.quantidade,
+                  precoUnitario: produto.preco,
+                  pagamento: formData.pagamento
+                    ? {
+                      valorTotal: formData.pagamento.valorTotal,
+                      sinal: formData.pagamento.sinal,
+                      dataInicio: toDateTime(formData.pagamento.dataInicio),
+                      numeroParcelas: formData.pagamento.numeroParcelas,
+                      parcelas: formData.pagamento.parcelas?.map((p: any) => ({
+                        numero: p.numero,
+                        valor: p.valor,
+                        vencimento: toDateTime(p.vencimento),
+                        statusPagamento: p.statusPagamento,
+                      })),
+                    }
+                    : null,
+                })),
+              },
+            ]
+            : [],
       }
 
       await axios.post("https://localhost:7195/api/cliente", payload, {
@@ -116,7 +115,7 @@ export default function NovoClientePage() {
       toast({ title: "Sucesso!", description: "Cliente criado com sucesso." })
       router.push("/clientes")
     } catch (err) {
-      console.error(err)
+      console.error("Error creating client:", err)
       toast({ title: "Erro!", description: "Falha ao criar cliente." })
     } finally {
       setIsSubmitting(false)

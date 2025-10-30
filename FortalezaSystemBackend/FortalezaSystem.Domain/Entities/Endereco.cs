@@ -2,12 +2,11 @@
 
 public class Endereco : BaseEntity
 {
-    private Endereco()
-    {
+    protected Endereco() { }
 
-    }
-    public Endereco(string? numero, string? logradouro, string? bairro, string? localizacao, string? cidade, string? estado, string? cep)
+    public Endereco(int? id, string? numero, string? logradouro, string? bairro, string? localizacao, string? cidade, string? estado, string? cep)
     {
+        Id = id;
         Numero = numero;
         Logradouro = logradouro;
         Bairro = bairro;
@@ -15,6 +14,23 @@ public class Endereco : BaseEntity
         Localizacao = localizacao;
         Cidade = cidade;
         Estado = estado;
+    }
+    public Endereco(
+        string numero,
+        string logradouro,
+        string bairro,
+        string localizacao,
+        string cidade,
+        string estado,
+        string cep)
+    {
+        Numero = numero;
+        Logradouro = logradouro;
+        Bairro = bairro;
+        Localizacao = localizacao;
+        Cidade = cidade;
+        Estado = estado;
+        CEP = cep;
     }
 
     public string? Numero { get; set; }

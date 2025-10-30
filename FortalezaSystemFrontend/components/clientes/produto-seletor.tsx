@@ -1,15 +1,16 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
-import { PlusIcon, Trash2Icon } from "@/components/icons"
+import { Trash2Icon } from "@/components/icons"
 import type { Produto } from "@/lib/data/estoque"
 import type { ProdutoSelecionado } from "@/lib/data/clientes"
-import { produtosIniciais } from "@/lib/data/estoque"
+import { useFetch } from "@/hooks/use-request"
+import { formatToBRL } from "@/lib/utils"
 
 interface ProdutoSeletorProps {
   produtosSelecionados?: ProdutoSelecionado[]
@@ -17,42 +18,84 @@ interface ProdutoSeletorProps {
 }
 
 export function ProdutoSeletor({ produtosSelecionados = [], onChange }: ProdutoSeletorProps) {
-  const [produtos, setProdutos] = useState<Produto[]>(produtosIniciais)
+  const [produtos, setProdutos] = useState<Produto[]>([])
   const [produtoAtual, setProdutoAtual] = useState<Produto | null>(null)
   const [produtoSelecionadoId, setProdutoSelecionadoId] = useState<string>("")
 
-  const handleProdutoChange = (produtoId: string) => {
-    const produto = produtos.find((p) => p.id === produtoId)
-    if (produto) {
-      setProdutoAtual(produto)
-      setProdutoSelecionadoId(produtoId)
+  const { data, loading, error } = useFetch<any>("https://localhost:7195/api/estoque")
+
+  useEffect(() => {
+    if (produtosSelecionados.length === 0) {
+      setProdutoAtual(null)
+      setProdutoSelecionadoId("")
     }
+  }, [produtosSelecionados.length])
+
+  useEffect(() => {
+    if (data?.data) {
+      setProdutos(data.data)
+    }
+  }, [data])
+
+  const pickFallbackProduct = (
+    removedId: string,
+    novosSelecionados: ProdutoSelecionado[],
+    todos: Produto[],
+  ): Produto | null => {
+    if (novosSelecionados.length > 0) {
+      const id = novosSelecionados[0].id
+      return todos.find((p) => p.id === id) ?? null
+    }
+
+    return todos.find((p) => p.id !== removedId) ?? null
   }
 
-  const handleAdicionarProduto = () => {
-    if (!produtoAtual) return
+  const handleProdutoChange = (produtoId: string) => {
+    const produto = produtos.find((p) => p.id === produtoId)
+    if (!produto) return
 
-    // Verifica se o produto já foi selecionado
-    const jaExiste = produtosSelecionados.some((p) => p.id === produtoAtual.id)
-    if (jaExiste) {
-      alert("Este produto já foi selecionado")
-      return
+    setProdutoAtual(produto)
+    setProdutoSelecionadoId(produtoId)
+
+    const jaExiste = produtosSelecionados.some((p) => p.id === produto.id)
+    if (!jaExiste) {
+      const novoProduto: ProdutoSelecionado = {
+        id: produto.id,
+        nome: produto.nome,
+        preco: produto.preco,
+        quantidade: produto.quantidade,
+        quantidadeSelecionada: 1,
+      }
+      onChange([...produtosSelecionados, novoProduto])
     }
-
-    const novoProduto: ProdutoSelecionado = {
-      id: produtoAtual.id,
-      nome: produtoAtual.nome,
-      preco: produtoAtual.preco,
-      quantidade: produtoAtual.quantidade,
-    }
-
-    onChange([...produtosSelecionados, novoProduto])
-    setProdutoAtual(null)
     setProdutoSelecionadoId("")
   }
 
   const handleRemoverProduto = (produtoId: string) => {
-    onChange(produtosSelecionados.filter((p) => p.id !== produtoId))
+    const novosSelecionados = produtosSelecionados.filter((p) => p.id !== produtoId)
+    onChange(novosSelecionados)
+
+    if (novosSelecionados.length === 0) {
+      setProdutoAtual(null)
+      setProdutoSelecionadoId("")
+      return
+    }
+
+    if (produtoAtual?.id === produtoId) {
+      const fallback = pickFallbackProduct(produtoId, novosSelecionados, produtos)
+      setProdutoAtual(fallback)
+      setProdutoSelecionadoId(fallback?.id ?? "")
+    }
+  }
+
+  const handleUpdateQuantidade = (produtoId: string, novaQuantidade: number) => {
+    const novosSelecionados = produtosSelecionados.map((p) => {
+      if (p.id === produtoId) {
+        return { ...p, quantidadeSelecionada: Math.max(1, novaQuantidade) }
+      }
+      return p
+    })
+    onChange(novosSelecionados)
   }
 
   return (
@@ -66,19 +109,19 @@ export function ProdutoSeletor({ produtosSelecionados = [], onChange }: ProdutoS
             <Label htmlFor="produto">Produto</Label>
             <Select value={produtoSelecionadoId} onValueChange={handleProdutoChange}>
               <SelectTrigger id="produto">
-                <SelectValue placeholder="Selecione um produto" />
+                <SelectValue placeholder={loading ? "Carregando..." : "Selecione um produto"} />
               </SelectTrigger>
               <SelectContent>
                 {produtos.map((produto) => (
                   <SelectItem key={produto.id} value={produto.id}>
-                    {produto.nome} - R$ {produto.preco.toFixed(2)}
+                    {produto.nome} - {formatToBRL(produto.preco.toFixed(2))}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
           </div>
 
-          {produtoAtual && (
+          {produtoAtual ? (
             <div className="space-y-4 border-t pt-4">
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
@@ -95,7 +138,7 @@ export function ProdutoSeletor({ produtosSelecionados = [], onChange }: ProdutoS
                 </div>
                 <div className="space-y-2">
                   <Label>Preço Unitário</Label>
-                  <Input value={`R$ ${produtoAtual.preco.toFixed(2)}`} disabled />
+                  <Input value={formatToBRL(produtoAtual.preco)} disabled />
                 </div>
                 <div className="space-y-2">
                   <Label>Quantidade em Estoque</Label>
@@ -106,19 +149,8 @@ export function ProdutoSeletor({ produtosSelecionados = [], onChange }: ProdutoS
                   <Input value={produtoAtual.fornecedor} disabled />
                 </div>
               </div>
-              <div className="space-y-2">
-                <Label>Descrição</Label>
-                <Input value={produtoAtual.descricao} disabled className="min-h-20" />
-              </div>
-
-              <Button type="button" onClick={handleAdicionarProduto} className="w-full sm:w-auto">
-                <PlusIcon className="mr-2 h-4 w-4" />
-                Adicionar Produto
-              </Button>
             </div>
-          )}
-
-          {!produtoAtual && (
+          ) : (
             <div className="text-center py-8 text-muted-foreground">
               Selecione um produto para visualizar os detalhes
             </div>
@@ -133,10 +165,27 @@ export function ProdutoSeletor({ produtosSelecionados = [], onChange }: ProdutoS
           </CardHeader>
           <CardContent className="space-y-3">
             {produtosSelecionados.map((produto) => (
-              <div key={produto.id} className="flex items-center justify-between p-3 border rounded-lg bg-muted/50">
+              <div
+                key={produto.id}
+                className="flex items-center justify-between gap-4 p-3 border rounded-lg bg-muted/50"
+              >
                 <div className="flex-1">
                   <p className="font-medium">{produto.nome}</p>
-                  <p className="text-sm text-muted-foreground">R$ {produto.preco.toFixed(2)}</p>
+                  <p className="text-sm text-muted-foreground">{formatToBRL(produto.preco)}</p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Label htmlFor={`qty-${produto.id}`} className="text-sm">
+                    Qtd:
+                  </Label>
+                  <Input
+                    id={`qty-${produto.id}`}
+                    type="number"
+                    min="1"
+                    max={produto.quantidade}
+                    value={produto.quantidadeSelecionada}
+                    onChange={(e) => handleUpdateQuantidade(produto.id, Number(e.target.value))}
+                    className="w-16"
+                  />
                 </div>
                 <Button type="button" variant="ghost" size="icon" onClick={() => handleRemoverProduto(produto.id)}>
                   <Trash2Icon className="h-4 w-4" />
@@ -148,7 +197,7 @@ export function ProdutoSeletor({ produtosSelecionados = [], onChange }: ProdutoS
               <div className="flex justify-between items-center font-semibold">
                 <span>Total:</span>
                 <span className="text-lg">
-                  R$ {produtosSelecionados.reduce((acc, p) => acc + p.preco, 0).toFixed(2)}
+                  {formatToBRL(produtosSelecionados.reduce((acc, p) => acc + p.preco * p.quantidadeSelecionada, 0))}
                 </span>
               </div>
             </div>

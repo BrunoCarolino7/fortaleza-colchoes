@@ -1,10 +1,10 @@
 "use client"
 
-import { use } from "react"
+import { use, useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { Header } from "@/components/header"
 import { ProdutoForm } from "@/components/estoque/produto-form"
-import { produtosIniciais } from "@/lib/data/estoque"
+import axios from "axios"
 
 export default function EditarProdutoPage({
   params,
@@ -13,7 +13,32 @@ export default function EditarProdutoPage({
 }) {
   const { id } = use(params)
   const router = useRouter()
-  const produto = produtosIniciais.find((p) => p.id === id)
+  const [produto, setProduto] = useState<any>(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    const fetchProduto = async () => {
+      try {
+        const response = await axios.get(`https://localhost:7195/api/estoque/produto/${id}`)
+        setProduto(response.data)
+      } catch (error) {
+        console.error("Erro ao carregar produto:", error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchProduto()
+  }, [id])
+
+  if (loading) {
+    return (
+      <div>
+        <Header title="Carregando..." />
+        <div className="p-6">Carregando produto...</div>
+      </div>
+    )
+  }
 
   if (!produto) {
     return (
@@ -26,10 +51,14 @@ export default function EditarProdutoPage({
     )
   }
 
-  const handleSubmit = (data: any) => {
-    console.log("[v0] Produto atualizado:", { id, ...data })
-    // Aqui você atualizaria o produto no estado global ou banco de dados
-    router.push(`/estoque/${id}`)
+  const handleSubmit = async (data: any) => {
+    try {
+      await axios.put(`https://localhost:7195/api/estoque/${id}`, data)
+      router.push(`/estoque`)
+    } catch (error) {
+      console.error("Erro ao atualizar produto:", error)
+      alert("Erro ao salvar as alterações.")
+    }
   }
 
   return (

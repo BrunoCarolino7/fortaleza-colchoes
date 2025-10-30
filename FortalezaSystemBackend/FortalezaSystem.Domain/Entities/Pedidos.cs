@@ -2,15 +2,15 @@
 
 public class Pedidos : BaseEntity
 {
-    public Pedidos(int clienteId, int informacoesPagamentoId)
+    public Pedidos() { }
+
+    public Pedidos(int? clienteId, List<ItemPedido> itens)
     {
         ClienteId = clienteId;
-        InformacoesPagamentoId = informacoesPagamentoId;
+        Itens = itens;
     }
+    public int? ClienteId { get; set; }
+    public Clientes Cliente { get; set; } = null!;
+    public ICollection<ItemPedido> Itens { get; set; } = [];
 
-    public int ClienteId { get; set; }
-    public int InformacoesPagamentoId { get; set; }
-
-    public Clientes? Cliente { get; set; }
-    public InformacoesPagamento? InformacoesPagamento { get; set; }
 }

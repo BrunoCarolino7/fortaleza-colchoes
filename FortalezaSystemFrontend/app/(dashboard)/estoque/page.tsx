@@ -1,4 +1,3 @@
-import { produtosIniciais } from "@/lib/data/estoque"
 import EstoqueContent from "./estoqueContent"
 export const dynamic = "force-dynamic"
 

@@ -4,8 +4,7 @@ namespace FortalezaSystem.Application.UseCases.Pedidos.Dtos;
 
 public class PedidosAllDto
 {
-    public int Id { get; set; }
-    public int ClienteId { get; set; }
-    public InformacoesPagamentoDto? InformacoesPagamento { get; set; }
+    public int? Id { get; set; }
+    public int? ClienteId { get; set; }
+    public ICollection<ItemPedidoDto>? Itens { get; set; }
 }
-

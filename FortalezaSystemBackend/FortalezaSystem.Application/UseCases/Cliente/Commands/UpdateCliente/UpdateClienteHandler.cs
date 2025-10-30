@@ -12,10 +12,11 @@ public class UpdateClienteHandler(DataContext context) : IRequestHandler<UpdateC
     {
         var cliente = await _context.Clientes
             .Include(c => c.Enderecos)
+            .Include(c => c.Documento)
             .Include(c => c.DadosProfissionais).ThenInclude(dp => dp.EnderecoEmpresa)
-            .Include(c => c.Conjuge)
-            .Include(c => c.Pagamento).ThenInclude(p => p.Parcelas)
-            .Include(c => c.Estoque)
+            .Include(c => c.Conjuge).ThenInclude(conj => conj.Documento)
+            .Include(c => c.Pedidos)!.ThenInclude(p => p.Itens)!.ThenInclude(i => i.InformacoesPagamento)!.ThenInclude(p => p.Parcelas)
+            .AsSplitQuery()
             .FirstOrDefaultAsync(c => c.Id == request.Id, cancellationToken);
 
         if (cliente is null)
@@ -29,33 +30,20 @@ public class UpdateClienteHandler(DataContext context) : IRequestHandler<UpdateC
             request.EstadoCivil,
             request.DataNascimento,
             request.Email,
-            request.Telefone);
-
+            request.Telefone,
+            request.CPF,
+            request.RG);
 
         if (request.Enderecos is not null && cliente.Enderecos is not null)
         {
             foreach (var dto in request.Enderecos)
             {
-                var existente = cliente.Enderecos.FirstOrDefault(e =>
-                    e.Numero == dto.Numero &&
-                    e.Logradouro == dto.Logradouro &&
-                    e.Cidade == dto.Cidade);
+                var existente = cliente.Enderecos.FirstOrDefault(e => e.Id == dto.Id);
 
                 if (existente is not null)
-                {
                     existente.Atualizar(dto.Numero, dto.Logradouro, dto.Bairro, dto.CEP, dto.Localizacao, dto.Cidade, dto.Estado);
-                }
                 else
-                {
-                    cliente.Enderecos.Add(new(
-                        dto.Numero,
-                        dto.Logradouro,
-                        dto.Bairro,
-                        dto.CEP,
-                        dto.Localizacao,
-                        dto.Cidade,
-                        dto.Estado));
-                }
+                    cliente.Enderecos.Add(new(0, dto.Numero, dto.Logradouro, dto.Bairro, dto.Localizacao, dto.Cidade, dto.Estado, dto.CEP));
             }
         }
 
@@ -74,7 +62,7 @@ public class UpdateClienteHandler(DataContext context) : IRequestHandler<UpdateC
                 if (cliente.DadosProfissionais.EnderecoEmpresa is not null)
                     cliente.DadosProfissionais.EnderecoEmpresa.Atualizar(e.Numero, e.Logradouro, e.Bairro, e.CEP, e.Localizacao, e.Cidade, e.Estado);
                 else
-                    cliente.DadosProfissionais.EnderecoEmpresa = new(e.Numero, e.Logradouro, e.Bairro, e.CEP, e.Localizacao, e.Cidade, e.Estado);
+                    cliente.DadosProfissionais.EnderecoEmpresa = new(0, e.Numero, e.Logradouro, e.Bairro, e.Localizacao, e.Cidade, e.Estado, e.CEP);
             }
         }
 
@@ -86,48 +74,103 @@ public class UpdateClienteHandler(DataContext context) : IRequestHandler<UpdateC
                 request.Conjuge.DataNascimento,
                 request.Conjuge.Naturalidade,
                 request.Conjuge.LocalDeTrabalho,
-                request.Conjuge.CPF,
-                request.Conjuge.RG);
+                request.Conjuge.Documento?.CPF,
+                request.Conjuge.Documento?.RG);
         }
 
-        if (request.Pagamento is not null)
+        if (request.Pedidos is not null)
         {
-            cliente.Pagamento ??= new();
-            cliente.Pagamento.Atualizar(
-                request.Pagamento.ValorTotal,
-                request.Pagamento.Sinal,
-                request.Pagamento.DataInicio,
-                request.Pagamento.NumeroParcelas);
+            cliente.Pedidos ??= [];
 
-            if (request.Pagamento.Parcelas is not null && cliente.Pagamento.Parcelas is not null)
+            foreach (var pedidoDto in request.Pedidos)
             {
-                foreach (var p in request.Pagamento.Parcelas)
+                var pedidoExistente = cliente.Pedidos.FirstOrDefault();
+
+                if (pedidoExistente is null)
                 {
-                    var existente = cliente.Pagamento.Parcelas.FirstOrDefault(x => x.Numero == p.Numero);
-                    if (existente != null)
-                        existente.Atualizar(p.Valor, p.Vencimento, p.StatusPagamento);
+                    // cria novo pedido
+                    pedidoExistente = new()
+                    {
+                        ClienteId = cliente.Id
+                    };
+                    cliente.Pedidos.Add(pedidoExistente);
+                }
+
+                // Atualiza Itens
+                pedidoExistente.Itens ??= [];
+
+                foreach (var itemDto in pedidoDto.Itens)
+                {
+                    var itemExistente = pedidoExistente.Itens.FirstOrDefault(i => i.ProdutoId == itemDto.ProdutoId);
+
+                    if (itemExistente is null)
+                    {
+                        // cria novo item com pagamento
+                        var novoItem = new FortalezaSystem.Domain.Entities.ItemPedido
+                        {
+                            ProdutoId = itemDto.ProdutoId,
+                            Quantidade = itemDto.Quantidade,
+                            PrecoUnitario = itemDto.PrecoUnitario,
+                            InformacoesPagamento = itemDto.Pagamento is not null
+                                ? new FortalezaSystem.Domain.Entities.InformacoesPagamento(
+                                    itemDto.Pagamento.ValorTotal,
+                                    itemDto.Pagamento.Sinal,
+                                    itemDto.Pagamento.DataInicio,
+                                    itemDto.Pagamento.NumeroParcelas,
+                                    itemDto.Pagamento.Parcelas?.Select(p =>
+                                        new FortalezaSystem.Domain.Entities.Parcela(p.Numero, p.Valor, p.Vencimento, p.StatusPagamento)
+                                    ).ToList()
+                                )
+                                : null
+                        };
+                        pedidoExistente.Itens.Add(novoItem);
+                    }
                     else
-                        cliente.Pagamento.Parcelas.Add(new(p.Numero, p.Valor, p.Vencimento, p.StatusPagamento));
+                    {
+                        // atualiza item existente
+                        itemExistente.PrecoUnitario = itemDto.PrecoUnitario;
+                        itemExistente.Quantidade = itemDto.Quantidade;
+
+                        if (itemDto.Pagamento is not null)
+                        {
+                            var pag = itemExistente.InformacoesPagamento;
+                            if (pag is null)
+                            {
+                                itemExistente.InformacoesPagamento = new FortalezaSystem.Domain.Entities.InformacoesPagamento(
+                                    itemDto.Pagamento.ValorTotal,
+                                    itemDto.Pagamento.Sinal,
+                                    itemDto.Pagamento.DataInicio,
+                                    itemDto.Pagamento.NumeroParcelas,
+                                    itemDto.Pagamento.Parcelas?.Select(p =>
+                                        new FortalezaSystem.Domain.Entities.Parcela(p.Numero, p.Valor, p.Vencimento, p.StatusPagamento)
+                                    ).ToList()
+                                );
+                            }
+                            else
+                            {
+                                pag.Atualizar(
+                                    itemDto.Pagamento.ValorTotal,
+                                    itemDto.Pagamento.Sinal,
+                                    itemDto.Pagamento.DataInicio,
+                                    itemDto.Pagamento.NumeroParcelas
+                                );
+
+                                if (itemDto.Pagamento.Parcelas is not null && pag.Parcelas is not null)
+                                {
+                                    foreach (var p in itemDto.Pagamento.Parcelas)
+                                    {
+                                        var parcelaExistente = pag.Parcelas.FirstOrDefault(x => x.Numero == p.Numero);
+                                        if (parcelaExistente != null)
+                                            parcelaExistente.Atualizar(p.Valor, p.Vencimento, p.StatusPagamento);
+                                        else
+                                            pag.Parcelas.Add(new(p.Numero, p.Valor, p.Vencimento, p.StatusPagamento));
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
             }
-        }
-
-        if (request.Estoque is not null && request.Estoque.Count != 0 && cliente.Estoque is not null)
-        {
-            foreach (var itemDto in request.Estoque)
-            {
-                var produtoExistente = await _context.Estoque
-                    .FirstOrDefaultAsync(x => x.Id == itemDto.Id, cancellationToken);
-
-                if (produtoExistente is null)
-                    continue;
-
-                if (!cliente.Estoque.Any(x => x.Id == produtoExistente.Id))
-                    cliente.Estoque.Add(produtoExistente);
-            }
-
-            var idsMantidos = request.Estoque.Select(x => x.Id).ToHashSet();
-            cliente.Estoque.RemoveAll(x => !idsMantidos.Contains(x.Id));
         }
 
         await _context.SaveChangesAsync(cancellationToken);

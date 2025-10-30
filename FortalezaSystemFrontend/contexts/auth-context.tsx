@@ -33,8 +33,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       const body = { User: usuario, Password: password }
       const response = await axios.post("https://localhost:7195/api/cliente/login", body)
-
-      console.log("response.data", response.data)
+      
       const data = await response.data;
 
       if (data.status === 200 && data.token) {

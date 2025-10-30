@@ -45,35 +45,38 @@ export default function DashboardPage() {
       })
   }, [])
 
-  console.log("ESTOQUE", totalEstoque)
+const stats = [
+  {
+    title: "Total de Clientes",
+    value:
+      errorClientes?.status === 404 || totalClientes === null ? (
+        "0"
+      ) : totalClientes !== null ? (
+        totalClientes.toString()
+      ) : (
+        <Skeleton className="h-6 w-12 rounded" />
+      ),
+    icon: UsersIcon,
+  },
+  {
+    title: "Produtos em Estoque",
+    value:
+      errorEstoque?.status === 404 || totalEstoque === null ? (
+        "0"
+      ) : totalEstoque !== null ? (
+        totalEstoque.total
+      ) : (
+        <Skeleton className="h-6 w-12 rounded" />
+      ),
+    icon: PackageIcon,
+    
+    trend:
+      totalEstoque && (totalEstoque.baixoEstoque > 0 || totalEstoque.semEstoque > 0)
+        ? `Baixo: ${totalEstoque.baixoEstoque} • Sem: ${totalEstoque.semEstoque}`
+        : undefined,
+  },
+]
 
-  const stats = [
-    {
-      title: "Total de Clientes",
-      value:
-        errorClientes?.status === 404 || totalClientes === null ? (
-          "0"
-        ) : totalClientes !== null ? (
-          totalClientes.toString()
-        ) : (
-          <Skeleton className="h-6 w-12 rounded" />
-        ),
-      icon: UsersIcon,
-    },
-    {
-      title: "Produtos em Estoque",
-      value:
-        errorEstoque?.status === 404 || totalEstoque === null ? (
-          "0"
-        ) : totalEstoque !== null ? (
-          totalEstoque.total
-        ) : (
-          <Skeleton className="h-6 w-12 rounded" />
-        ),
-      icon: PackageIcon,
-      trend: totalEstoque?.baixoEstoque ? `Baixo estoque: ${totalEstoque.baixoEstoque}` : undefined,
-    }
-  ]
 
   return (
     <div className="flex flex-col">

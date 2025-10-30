@@ -4,24 +4,22 @@ namespace FortalezaSystem.Domain.Entities;
 
 public class Clientes : AggregateRoot
 {
-
-    private Clientes() { }
+    public Clientes() { }
 
     public Clientes(
-    string? nome,
-    string? filiacao,
-    DateOnly? dataNascimento,
-    string? estadoCivil,
-    string? nacionalidade,
-    string? naturalidade,
-    string? telefone,
-    string? email,
-    Documento? documento,
-    DadosProfissionais? dadosProfissionais,
-    Conjuge? conjuge,
-    InformacoesPagamento? pagamento,
-    ICollection<Endereco>? enderecos,
-    List<Estoque> estoque)
+        string? nome,
+        string? filiacao,
+        DateOnly? dataNascimento,
+        string? estadoCivil,
+        string? nacionalidade,
+        string? naturalidade,
+        string? telefone,
+        string? email,
+        Documento? documento,
+        DadosProfissionais? dadosProfissionais,
+        Conjuge? conjuge,
+        ICollection<Endereco>? enderecos,
+        List<Pedidos>? pedidos)
     {
         Nome = nome;
         Filiacao = filiacao;
@@ -34,65 +32,52 @@ public class Clientes : AggregateRoot
         Documento = documento;
         DadosProfissionais = dadosProfissionais;
         Conjuge = conjuge;
-        Pagamento = pagamento;
         Enderecos = enderecos ?? [];
-        Estoque = estoque;
+        Pedidos = pedidos ?? [];
         Status = true;
     }
 
-    public string? Nome { get; private set; } = default!;
-    public string? Filiacao { get; private set; } = default!;
+    public string? Nome { get; private set; }
+    public string? Filiacao { get; private set; }
     public DateOnly? DataNascimento { get; private set; }
-    public string? EstadoCivil { get; private set; } = default!;
-    public string? Nacionalidade { get; private set; } = default!;
-    public string? Naturalidade { get; private set; } = default!;
-    public string? Email { get; private set; } = default!;
-    public string? Telefone { get; private set; } = default!;
-    public bool? Status { get; private set; } = default!;
-    public ICollection<Endereco>? Enderecos { get; private set; } = [];
-    public Documento? Documento { get; private set; }
+    public string? EstadoCivil { get; private set; }
+    public string? Nacionalidade { get; private set; }
+    public string? Naturalidade { get; private set; }
+    public string? Email { get; private set; }
+    public string? Telefone { get; private set; }
+    public ICollection<Endereco>? Enderecos { get; set; }
+    public Documento? Documento { get; set; }
     public DadosProfissionais? DadosProfissionais { get; set; }
     public Conjuge? Conjuge { get; set; }
-    public InformacoesPagamento? Pagamento { get; set; }
-    public List<Estoque>? Estoque { get; private set; }
-    public FortalezaUser? FortalezaUser { get; private set; }
-    public List<Pedidos>? Pedidos { get; private set; }
+    public FortalezaUser? FortalezaUser { get; set; }
+    public List<Pedidos>? Pedidos { get; set; }
 
     public void AtualizarDados(string nome, string cpf, string rg)
     {
-        if (string.IsNullOrWhiteSpace(nome))
-            throw new ArgumentException("O nome não pode ser vazio.");
-        if (string.IsNullOrWhiteSpace(cpf))
-            throw new ArgumentException("O CPF não pode ser vazio.");
-        if (string.IsNullOrWhiteSpace(rg))
-            throw new ArgumentException("O RG não pode ser vazio.");
-        if (Documento is null)
-            throw new ArgumentException("Não há documento registrado para essa pessoa.");
+        if (string.IsNullOrWhiteSpace(nome)) throw new ArgumentException("Nome obrigatório.");
+        if (string.IsNullOrWhiteSpace(cpf)) throw new ArgumentException("CPF obrigatório.");
+        if (string.IsNullOrWhiteSpace(rg)) throw new ArgumentException("RG obrigatório.");
+        if (Documento is null) throw new ArgumentException("Documento não encontrado.");
 
         Nome = nome;
         Documento.CPF = cpf;
         Documento.RG = rg;
     }
 
-    public void AtualizarDados(string? nome, string? filiacao, string? nacionalidade, string? naturalidade,
-    string? estadoCivil, DateOnly? dataNascimento, string? email, string? telefone)
+    public void AtualizarDados(
+        string? nome, string? filiacao, string? nacionalidade, string? naturalidade,
+        string? estadoCivil, DateOnly? dataNascimento, string? email, string? telefone,
+        string? cpf, string? rg)
     {
-        if (nome is not null)
-            Nome = nome;
-        if (filiacao is not null)
-            Filiacao = filiacao;
-
-        if (nacionalidade is not null)
-            Nacionalidade = nacionalidade;
-        if (naturalidade is not null)
-            Naturalidade = naturalidade;
-        if (estadoCivil is not null)
-            EstadoCivil = estadoCivil;
-        if (dataNascimento is not null)
-            DataNascimento = dataNascimento;
-        if (email is not null)
-            Email = email;
-        if (telefone is not null)
-            Telefone = telefone;
+        if (nome is not null) Nome = nome;
+        if (filiacao is not null) Filiacao = filiacao;
+        if (nacionalidade is not null) Nacionalidade = nacionalidade;
+        if (naturalidade is not null) Naturalidade = naturalidade;
+        if (estadoCivil is not null) EstadoCivil = estadoCivil;
+        if (dataNascimento is not null) DataNascimento = dataNascimento;
+        if (email is not null) Email = email;
+        if (telefone is not null) Telefone = telefone;
+        if (cpf is not null && Documento is not null) Documento.CPF = cpf;
+        if (telefone is not null && Documento is not null) Documento.RG = rg;
     }
 }

@@ -1,6 +1,5 @@
 "use client"
 
-import type React from "react"
 import { ChangeEvent, FormEvent, useState } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
@@ -10,20 +9,21 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { PlusIcon, Trash2Icon } from "@/components/icons"
+import { EnderecoForm } from "./endereco-form"
 import type {
   Cliente,
   Endereco,
   DadosProfissionais,
   Conjuge,
-  Referencia,
   Pagamento,
   Parcela,
+  Referencia,
 } from "@/lib/data/clientes"
-import { EnderecoForm } from "./endereco-form"
+import { PatternFormat } from "react-number-format"
 
 interface ClienteFormProps {
   cliente?: Cliente
-  onSubmit: (data: Omit<Cliente, "id" | "dataCadastro">) => void
+  onSubmit: (data: any) => void
   isSubmitting?: boolean
 }
 
@@ -31,19 +31,22 @@ export function ClienteForm({ cliente, onSubmit, isSubmitting = false }: Cliente
   const router = useRouter()
 
   const [formData, setFormData] = useState({
-    nome: cliente?.nome || "",
-    filiacao: cliente?.filiacao || "",
-    nacionalidade: cliente?.nacionalidade || "Brasileiro",
-    naturalidade: cliente?.naturalidade || "",
-    estadoCivil: cliente?.estadoCivil || "Solteiro",
-    dataNascimento: cliente?.dataNascimento || "",
-    cpf: cliente?.documento?.cpf || "",
-    rg: cliente?.documento?.rg || ""
+    nome: cliente?.nome ?? "",
+    filiacao: cliente?.filiacao ?? "",
+    nacionalidade: cliente?.nacionalidade ?? "Brasileiro",
+    naturalidade: cliente?.naturalidade ?? "",
+    estadoCivil: cliente?.estadoCivil ?? "Solteiro",
+    dataNascimento: cliente?.dataNascimento ?? "",
+    cpf: cliente?.documento?.cpf ?? "",
+    rg: cliente?.documento?.rg ?? "",
+    email: cliente?.email ?? "",
+    telefone: cliente?.telefone ?? "",
   })
 
   const [enderecos, setEnderecos] = useState<Endereco[]>(
-    cliente?.enderecos || [
+    cliente?.enderecos ?? [
       {
+        id: "",
         logradouro: "",
         numero: "",
         bairro: "",
@@ -56,9 +59,9 @@ export function ClienteForm({ cliente, onSubmit, isSubmitting = false }: Cliente
   )
 
   const [dadosProfissionais, setDadosProfissionais] = useState<DadosProfissionais | undefined>(
-    cliente?.dadosProfissionais || {
+    cliente?.dadosProfissionais ?? {
       empresa: "",
-      empregoAnterior: "",
+      profissao: "",
       telefone: "",
       salario: 0,
       enderecoEmpresa: {
@@ -74,54 +77,108 @@ export function ClienteForm({ cliente, onSubmit, isSubmitting = false }: Cliente
   )
 
   const [conjuge, setConjuge] = useState<Conjuge | undefined>(cliente?.conjuge)
-
-  const [referencias, setReferencias] = useState<Referencia[]>(cliente?.referencias || [])
-
   const [pagamento, setPagamento] = useState<Pagamento | undefined>(cliente?.pagamento)
+  const [referencias, setReferencias] = useState<Referencia[]>(cliente?.referencias ?? [])
+
+  const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target
+    setFormData((prev) => ({ ...prev, [name]: value }))
+  }
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault()
-    onSubmit({
-      ...formData,
-      enderecos,
-      dadosProfissionais,
-      conjuge,
-      referencias,
-      pagamento
-    })
+
+    const payload = {
+      Id: Number(cliente?.id),
+      Nome: formData.nome,
+      Filiacao: formData.filiacao,
+      Nacionalidade: formData.nacionalidade,
+      Naturalidade: formData.naturalidade,
+      EstadoCivil: formData.estadoCivil,
+      DataNascimento: formData.dataNascimento || null,
+      CPF: formData.cpf,
+      RG: formData.rg,
+      Email: formData.email,
+      Telefone: formData.telefone,
+
+      Enderecos: enderecos.map((e) => ({
+        Id: e.id ? Number(e.id) : null,
+        Logradouro: e.logradouro,
+        Numero: e.numero,
+        Bairro: e.bairro,
+        CEP: e.cep,
+        Localizacao: e.localizacao,
+        Cidade: e.cidade,
+        Estado: e.estado,
+      })),
+
+      DadosProfissionais: dadosProfissionais
+        ? {
+          Empresa: dadosProfissionais.empresa,
+          Profissao: dadosProfissionais.profissao,
+          Telefone: dadosProfissionais.telefone,
+          Salario: dadosProfissionais.salario,
+          EnderecoEmpresa: {
+            Id: dadosProfissionais.enderecoEmpresa.id ? Number(dadosProfissionais.enderecoEmpresa.id) : null,
+            Logradouro: dadosProfissionais.enderecoEmpresa.logradouro,
+            Numero: dadosProfissionais.enderecoEmpresa.numero,
+            Bairro: dadosProfissionais.enderecoEmpresa.bairro,
+            CEP: dadosProfissionais.enderecoEmpresa.cep,
+            Localizacao: dadosProfissionais.enderecoEmpresa.localizacao,
+            Cidade: dadosProfissionais.enderecoEmpresa.cidade,
+            Estado: dadosProfissionais.enderecoEmpresa.estado,
+          },
+        }
+        : null,
+
+      Conjuge: conjuge
+        ? {
+          Nome: conjuge.nome,
+          DataNascimento: conjuge.dataNascimento,
+          Naturalidade: conjuge.naturalidade,
+          LocalDeTrabalho: conjuge.localDeTrabalho,
+          Documento: {
+            CPF: conjuge.cpf,
+            RG: conjuge.rg,
+          },
+        }
+        : null,
+
+      Pedidos: pagamento
+        ? [
+          {
+            Itens: [
+              {
+                ProdutoId: 0,
+                Quantidade: 1,
+                PrecoUnitario: pagamento.valorTotal,
+                Pagamento: {
+                  ValorTotal: pagamento.valorTotal,
+                  Sinal: pagamento.sinal,
+                  DataInicio: pagamento.dataInicio,
+                  NumeroParcelas: pagamento.numeroParcelas,
+                  Parcelas: pagamento.parcelas.map((p: Parcela) => ({
+                    Numero: p.numero,
+                    Valor: p.valor,
+                    Vencimento: p.vencimento,
+                    StatusPagamento: p.statusPagamento,
+                  })),
+                },
+              },
+            ],
+          },
+        ]
+        : [],
+    }
+
+    onSubmit(payload)
   }
 
-  const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
-    setFormData((prev) => ({
-      ...prev,
-      [e.target.name]: e.target.value,
-    }))
-  }
-
-  const addEndereco = () => {
+  const addEndereco = () =>
     setEnderecos([
       ...enderecos,
-      {
-        logradouro: "",
-        numero: "",
-        bairro: "",
-        cep: "",
-        localizacao: "",
-        cidade: "",
-        estado: "",
-      },
+      { id: "", logradouro: "", numero: "", bairro: "", cep: "", localizacao: "", cidade: "", estado: "" },
     ])
-  }
-
-  const removeEndereco = (index: number) => {
-    setEnderecos(enderecos.filter((_, i) => i !== index))
-  }
-
-  const updateEndereco = (index: number, endereco: Endereco) => {
-    const newEnderecos = [...enderecos]
-    newEnderecos[index] = endereco
-    setEnderecos(newEnderecos)
-  }
 
   const addReferencia = () => {
     setReferencias([
@@ -141,6 +198,9 @@ export function ClienteForm({ cliente, onSubmit, isSubmitting = false }: Cliente
     ])
   }
 
+  const removeEndereco = (index: number) =>
+    setEnderecos((prev) => prev.filter((_, i) => i !== index))
+
   const removeReferencia = (index: number) => {
     setReferencias(referencias.filter((_, i) => i !== index))
   }
@@ -149,6 +209,12 @@ export function ClienteForm({ cliente, onSubmit, isSubmitting = false }: Cliente
     const newReferencias = [...referencias]
     newReferencias[index] = referencia
     setReferencias(newReferencias)
+  }
+
+  const updateEndereco = (index: number, endereco: Endereco) => {
+    const newEnderecos = [...enderecos]
+    newEnderecos[index] = { ...newEnderecos[index], ...endereco, id: newEnderecos[index].id }
+    setEnderecos(newEnderecos)
   }
 
   const gerarParcelas = () => {
@@ -296,12 +362,32 @@ export function ClienteForm({ cliente, onSubmit, isSubmitting = false }: Cliente
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="cpf">CPF</Label>
-                  <Input id="cpf" name="cpf" value={formData.cpf} onChange={handleChange} required />
+                  <PatternFormat
+                    format="###.###.###-##"
+                    value={formData.cpf}
+                    onValueChange={(values) =>
+                      setFormData((prev) => ({ ...prev, cpf: values.value }))
+                    }
+                    customInput={Input}
+                    placeholder="000.000.000-00"
+                    required
+                  />
                 </div>
+
                 <div className="space-y-2">
                   <Label htmlFor="rg">RG</Label>
-                  <Input id="rg" name="rg" value={formData.rg} onChange={handleChange} required />
+                  <PatternFormat
+                    format="##.###.###-#"
+                    value={formData.rg}
+                    onValueChange={(values) =>
+                      setFormData((prev) => ({ ...prev, rg: values.value }))
+                    }
+                    customInput={Input}
+                    placeholder="00.000.000-0"
+                    required
+                  />
                 </div>
+
               </div>
             </CardContent>
           </Card>
@@ -313,7 +399,7 @@ export function ClienteForm({ cliente, onSubmit, isSubmitting = false }: Cliente
               <EnderecoForm
                 key={index}
                 endereco={endereco}
-                onChange={(e) => updateEndereco(index, e)}
+                onChange={(e) => updateEndereco(index, { ...e, id: endereco.id })}
                 onRemove={enderecos.length > 1 ? () => removeEndereco(index) : undefined}
                 title={`Endereço ${index + 1}`}
                 showRemove={enderecos.length > 1}
@@ -334,6 +420,18 @@ export function ClienteForm({ cliente, onSubmit, isSubmitting = false }: Cliente
             <CardContent className="space-y-4">
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
+                  <Label>Profissão</Label>
+                  <Input
+                    value={dadosProfissionais?.profissao || ""}
+                    onChange={(e) =>
+                      setDadosProfissionais((prev) => ({
+                        ...prev!,
+                        profissao: e.target.value,
+                      }))
+                    }
+                  />
+                </div>
+                <div className="space-y-2">
                   <Label>Empresa Atual</Label>
                   <Input
                     value={dadosProfissionais?.empresa || ""}
@@ -341,18 +439,6 @@ export function ClienteForm({ cliente, onSubmit, isSubmitting = false }: Cliente
                       setDadosProfissionais((prev) => ({
                         ...prev!,
                         empresa: e.target.value,
-                      }))
-                    }
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Emprego Anterior</Label>
-                  <Input
-                    value={dadosProfissionais?.empregoAnterior || ""}
-                    onChange={(e) =>
-                      setDadosProfissionais((prev) => ({
-                        ...prev!,
-                        empregoAnterior: e.target.value,
                       }))
                     }
                   />
