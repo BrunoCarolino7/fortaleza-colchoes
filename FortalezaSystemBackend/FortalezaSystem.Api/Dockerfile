@@ -1,16 +1,15 @@
 FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
 WORKDIR /src
 
-COPY ["../FortalezaSystem.Application/FortalezaSystem.Application.csproj", "FortalezaSystem.Application/"]
-COPY ["../FortalezaSystem.Domain/FortalezaSystem.Domain.csproj", "FortalezaSystem.Domain/"]
-COPY ["../FortalezaSystem.Infrastructure/FortalezaSystem.Infrastructure.csproj", "FortalezaSystem.Infrastructure/"]
-COPY ["../FortalezaSystem.Common/FortalezaSystem.Common.csproj", "FortalezaSystem.Common/"]
-COPY ["FortalezaSystem.Api.csproj", "./"]
+COPY ["FortalezaSystem.Application/FortalezaSystem.Application.csproj", "FortalezaSystem.Application/"]
+COPY ["FortalezaSystem.Domain/FortalezaSystem.Domain.csproj", "FortalezaSystem.Domain/"]
+COPY ["FortalezaSystem.Infrastructure/FortalezaSystem.Infrastructure.csproj", "FortalezaSystem.Infrastructure/"]
+COPY ["FortalezaSystem.Common/FortalezaSystem.Common.csproj", "FortalezaSystem.Common/"]
+COPY ["FortalezaSystem.Api/FortalezaSystem.Api.csproj", "FortalezaSystem.Api/"]
 
-RUN dotnet restore "FortalezaSystem.Api.csproj"
+RUN dotnet restore "FortalezaSystem.Api/FortalezaSystem.Api.csproj"
 
-COPY .. .
-
+COPY . .
 WORKDIR "/src/FortalezaSystem.Api"
 RUN dotnet publish -c Release -o /app/publish
 
