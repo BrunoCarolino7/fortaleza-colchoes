@@ -12,7 +12,7 @@ export interface Endereco {
 export interface DadosProfissionais {
   id?: string
   empresa: string
-  profissao: string
+  profissao: string  
   telefone: string
   salario: number
   enderecoEmpresa: Endereco
@@ -65,12 +65,10 @@ export interface Pedido {
   parcelaId: number
 }
 
-export interface ProdutosSelecionados extends Array<ProdutoSelecionado> { }
+export interface ProdutosSelecionados extends Array<ProdutoSelecionado> {}
 
 export interface Cliente {
   id: string
-  rg?: string
-  cpf?: string
   nome: string
   email: string
   telefone: string

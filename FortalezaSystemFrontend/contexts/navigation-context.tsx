@@ -1,6 +1,6 @@
 "use client"
 
-import { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from "react"
+import { createContext, useContext, useState, useCallback, useEffect, type ReactNode, Suspense } from "react"
 import { usePathname, useSearchParams } from "next/navigation"
 
 interface NavigationContextType {
@@ -12,7 +12,7 @@ interface NavigationContextType {
 
 const NavigationContext = createContext<NavigationContextType | undefined>(undefined)
 
-export function NavigationProvider({ children }: { children: ReactNode }) {
+function NavigationProviderContent({ children }: { children: ReactNode }) {
   const pathname = usePathname()
   const searchParams = useSearchParams()
   const [isNavigating, setIsNavigating] = useState(false)
@@ -54,6 +54,14 @@ export function NavigationProvider({ children }: { children: ReactNode }) {
     <NavigationContext.Provider value={{ isNavigating, progress, startNavigation, completeNavigation }}>
       {children}
     </NavigationContext.Provider>
+  )
+}
+
+export function NavigationProvider({ children }: { children: ReactNode }) {
+  return (
+    <Suspense fallback={null}>
+      <NavigationProviderContent>{children}</NavigationProviderContent>
+    </Suspense>
   )
 }
 

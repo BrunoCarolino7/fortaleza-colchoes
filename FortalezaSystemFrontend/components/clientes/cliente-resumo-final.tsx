@@ -29,7 +29,7 @@ export function ClienteResumoFinal({
   const totalProdutos = produtosSelecionados.reduce((acc, p) => acc + p.preco * p.quantidadeSelecionada, 0)
 
   const validacoes = {
-    pessoal: !!(formData.nome && formData.email && formData.telefone && formData.documento?.cpf && formData.documento?.rg),
+    pessoal: !!(formData.nome && formData.email && formData.telefone && formData.cpf && formData.rg),
     enderecos: enderecos.length > 0 && enderecos.every((e) => e.logradouro && e.numero && e.cidade),
     profissional: !!dadosProfissionais?.profissao,
     produtos: produtosSelecionados.length > 0,
@@ -37,7 +37,7 @@ export function ClienteResumoFinal({
   }
 
   const todasValidas = Object.values(validacoes).every((v) => v)
-  console.log(formData)
+
   return (
     <div className="space-y-4">
       {!todasValidas && (
