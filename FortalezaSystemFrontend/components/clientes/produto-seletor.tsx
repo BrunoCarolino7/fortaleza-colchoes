@@ -21,8 +21,9 @@ export function ProdutoSeletor({ produtosSelecionados = [], onChange }: ProdutoS
   const [produtos, setProdutos] = useState<Produto[]>([])
   const [produtoAtual, setProdutoAtual] = useState<Produto | null>(null)
   const [produtoSelecionadoId, setProdutoSelecionadoId] = useState<string>("")
+  const api = process.env.NEXT_PUBLIC_API
 
-  const { data, loading, error } = useFetch<any>("https://localhost:7195/api/estoque")
+  const { data, loading } = useFetch<any>(`${api}/estoque`)
 
   useEffect(() => {
     if (produtosSelecionados.length === 0) {

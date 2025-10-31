@@ -7,10 +7,11 @@ import axios from "axios"
 
 export default function NovoProdutoPage() {
   const router = useRouter()
+  const api = process.env.NEXT_PUBLIC_API
 
   const handleSubmit = async (data: any) => {
     try {
-      await axios.post("https://localhost:7195/api/estoque", data)
+      await axios.post(`${api}/estoque`, data)
       console.log("Produto salvo com sucesso!", data)
       router.push("/estoque")
     } catch (error) {

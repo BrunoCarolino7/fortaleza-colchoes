@@ -14,10 +14,12 @@ export default function DashboardPage() {
   const [totalEstoque, setTotalEstoque] = useState<EstoqueTotalAgregado | null>(null)
   const [errorClientes, setErrorClientes] = useState<AxiosErrorInfo | null>(null)
   const [errorEstoque, setErrorEstoque] = useState<AxiosErrorInfo | null>(null)
+  const api = process.env.NEXT_PUBLIC_API
+
 
   useEffect(() => {
     axios
-      .get("https://localhost:7195/api/cliente/count")
+      .get(`${api}/cliente/count`)
       .then((response) => setTotalClientes(response.data))
       .catch((err: AxiosError) => {
         const errorInfo: AxiosErrorInfo = {
@@ -31,7 +33,7 @@ export default function DashboardPage() {
       })
 
     axios
-      .get("https://localhost:7195/api/estoque")
+      .get(`${api}/estoque`)
       .then((response) => setTotalEstoque(response.data))
       .catch((err: AxiosError) => {
         const errorInfo: AxiosErrorInfo = {
@@ -45,37 +47,37 @@ export default function DashboardPage() {
       })
   }, [])
 
-const stats = [
-  {
-    title: "Total de Clientes",
-    value:
-      errorClientes?.status === 404 || totalClientes === null ? (
-        "0"
-      ) : totalClientes !== null ? (
-        totalClientes.toString()
-      ) : (
-        <Skeleton className="h-6 w-12 rounded" />
-      ),
-    icon: UsersIcon,
-  },
-  {
-    title: "Produtos em Estoque",
-    value:
-      errorEstoque?.status === 404 || totalEstoque === null ? (
-        "0"
-      ) : totalEstoque !== null ? (
-        totalEstoque.total
-      ) : (
-        <Skeleton className="h-6 w-12 rounded" />
-      ),
-    icon: PackageIcon,
-    
-    trend:
-      totalEstoque && (totalEstoque.baixoEstoque > 0 || totalEstoque.semEstoque > 0)
-        ? `Baixo: ${totalEstoque.baixoEstoque} • Sem: ${totalEstoque.semEstoque}`
-        : undefined,
-  },
-]
+  const stats = [
+    {
+      title: "Total de Clientes",
+      value:
+        errorClientes?.status === 404 || totalClientes === null ? (
+          "0"
+        ) : totalClientes !== null ? (
+          totalClientes.toString()
+        ) : (
+          <Skeleton className="h-6 w-12 rounded" />
+        ),
+      icon: UsersIcon,
+    },
+    {
+      title: "Produtos em Estoque",
+      value:
+        errorEstoque?.status === 404 || totalEstoque === null ? (
+          "0"
+        ) : totalEstoque !== null ? (
+          totalEstoque.total
+        ) : (
+          <Skeleton className="h-6 w-12 rounded" />
+        ),
+      icon: PackageIcon,
+
+      trend:
+        totalEstoque && (totalEstoque.baixoEstoque > 0 || totalEstoque.semEstoque > 0)
+          ? `Baixo: ${totalEstoque.baixoEstoque} • Sem: ${totalEstoque.semEstoque}`
+          : undefined,
+    },
+  ]
 
 
   return (

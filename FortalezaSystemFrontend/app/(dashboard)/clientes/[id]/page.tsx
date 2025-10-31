@@ -14,22 +14,15 @@ import type { Cliente } from "@/app/interfaces/geral"
 import { formatCEP, formatCPF, formatDateBR, formatPhoneNumber, formatRG, formatToBRL } from "@/lib/utils"
 import { PedidosTab } from "@/components/clientes/pedidos-tab"
 
-export default function ClienteDetalhesPage({
-  params,
-}: {
-  params: Promise<{ id: string }>
-}) {
+export default function ClienteDetalhesPage({ params }: { params: Promise<{ id: string }> }) {
   const [id, setId] = useState<string | null>(null)
+  const api = process.env.NEXT_PUBLIC_API
 
   useEffect(() => {
     params.then((p) => setId(p.id))
   }, [params])
 
-  const {
-    data: cliente,
-    loading,
-    error,
-  } = useFetch<Cliente>(id ? `https://localhost:7195/api/cliente/${id}` : "", { enabled: !!id })
+  const { data: cliente, loading, error, } = useFetch<Cliente>(id ? `${api}/cliente/${id}` : "", { enabled: !!id })
 
   if (!id || loading) {
     return (

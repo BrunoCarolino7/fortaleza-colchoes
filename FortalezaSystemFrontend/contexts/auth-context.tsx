@@ -19,6 +19,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [token, setToken] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const router = useRouter()
+  const api = process.env.NEXT_PUBLIC_API
 
   useEffect(() => {
     const savedToken = localStorage.getItem("auth_token")
@@ -32,8 +33,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const login = async (usuario: string, password: string) => {
     try {
       const body = { User: usuario, Password: password }
-      const response = await axios.post("https://localhost:7195/api/cliente/login", body)
-      
+      const response = await axios.post(`${api}/cliente/login`, body)
+
       const data = await response.data;
 
       if (data.status === 200 && data.token) {

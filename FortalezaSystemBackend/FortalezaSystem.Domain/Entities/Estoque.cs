@@ -16,6 +16,17 @@ public class Estoque : BaseEntity
         StatusEstoque = statusEstoque;
     }
 
+    public Estoque(int? id, string? nome, string? categoria, string? tamanho, decimal? preco, int? quantidade, EStatusEstoque? statusEstoque)
+    {
+        Id = id;
+        Nome = nome;
+        Categoria = categoria;
+        Tamanho = tamanho;
+        Preco = preco;
+        Quantidade = quantidade;
+        StatusEstoque = statusEstoque;
+    }
+
     public string? Nome { get; private set; }
     public string? Categoria { get; private set; }
     public string? Tamanho { get; private set; }
@@ -62,4 +73,13 @@ public class Estoque : BaseEntity
             0 => EStatusEstoque.SemEstoque,
             _ => throw new ArgumentOutOfRangeException(nameof(quantidade))
         };
+
+    public void AtualizarEstoque(int? quantidade)
+    {
+        if (quantidade > 0)
+        {
+            Quantidade = quantidade;
+            StatusEstoque = ValidaEstoque(quantidade);
+        }
+    }
 }

@@ -13,6 +13,7 @@ export default function NovoPedidoPage() {
   const { toast } = useToast()
   const [isSubmitting, setIsSubmitting] = useState(false)
   const clienteId = searchParams.get("clienteId")
+  const api = process.env.NEXT_PUBLIC_API
 
   const toDateTime = (value: any) => {
     if (!value) return null
@@ -24,29 +25,28 @@ export default function NovoPedidoPage() {
     if (!clienteId) return
 
     setIsSubmitting(true)
-    try {      
+    try {
       const body = formData.estoque.map((produto: any) => ({
         produtoId: Number.parseInt(produto.id),
         quantidade: Number(produto.quantidade),
         precoUnitario: Number(produto.preco),
         pagamento: formData.pagamento
           ? {
-              valorTotal: Number(formData.pagamento.valorTotal),
-              sinal: Number(formData.pagamento.sinal),
-              dataInicio: toDateTime(formData.pagamento.dataInicio),
-              numeroParcelas: Number(formData.pagamento.numeroParcelas),
-              parcelas: formData.pagamento.parcelas?.map((p: any) => ({
-                numero: Number(p.numero),
-                valor: Number(p.valor),
-                vencimento: toDateTime(p.vencimento),
-                statusPagamento: p.statusPagamento?.toString() ?? null, 
-              })),
-            }
+            valorTotal: Number(formData.pagamento.valorTotal),
+            sinal: Number(formData.pagamento.sinal),
+            dataInicio: toDateTime(formData.pagamento.dataInicio),
+            numeroParcelas: Number(formData.pagamento.numeroParcelas),
+            parcelas: formData.pagamento.parcelas?.map((p: any) => ({
+              numero: Number(p.numero),
+              valor: Number(p.valor),
+              vencimento: toDateTime(p.vencimento),
+              statusPagamento: p.statusPagamento?.toString() ?? null,
+            })),
+          }
           : null,
       }))
 
-      await axios.post(
-        `https://localhost:7195/api/pedido/gather/cliente/${clienteId}`, 
+      await axios.post(`${api}/pedido/gather/cliente/${clienteId}`,
         body,
         { headers: { "Content-Type": "application/json" } }
       )

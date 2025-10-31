@@ -15,11 +15,12 @@ export default function EditarProdutoPage({
   const router = useRouter()
   const [produto, setProduto] = useState<any>(null)
   const [loading, setLoading] = useState(true)
+  const api = process.env.NEXT_PUBLIC_API
 
   useEffect(() => {
     const fetchProduto = async () => {
       try {
-        const response = await axios.get(`https://localhost:7195/api/estoque/produto/${id}`)
+        const response = await axios.get(`${api}/estoque/produto/${id}`)
         setProduto(response.data)
       } catch (error) {
         console.error("Erro ao carregar produto:", error)
@@ -53,7 +54,7 @@ export default function EditarProdutoPage({
 
   const handleSubmit = async (data: any) => {
     try {
-      await axios.put(`https://localhost:7195/api/estoque/${id}`, data)
+      await axios.put(`${api}/estoque/${id}`, data)
       router.push(`/estoque`)
     } catch (error) {
       console.error("Erro ao atualizar produto:", error)

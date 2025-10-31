@@ -12,9 +12,10 @@ export default function EditarClientePage({ params }: { params: Promise<{ id: st
   const { id } = use(params)
   const router = useRouter()
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const api = process.env.NEXT_PUBLIC_API
 
   const { data: cliente, loading, error } = useFetch<Cliente>(
-    id ? `https://localhost:7195/api/cliente/${id}` : "", { enabled: !!id }
+    id ? `${api}/cliente/${id}` : "", { enabled: !!id }
   )
 
   if (loading) {
@@ -40,7 +41,7 @@ export default function EditarClientePage({ params }: { params: Promise<{ id: st
   const handleSubmit = async (data: any) => {
     setIsSubmitting(true)
     try {
-      await axios.put(`https://localhost:7195/api/cliente/${data.Id}`, data, {
+      await axios.put(`${api}/cliente/${data.Id}`, data, {
         headers: { "Content-Type": "application/json" },
       })
 

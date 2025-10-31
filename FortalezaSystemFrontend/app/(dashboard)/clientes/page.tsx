@@ -60,15 +60,13 @@ export default function ClientesPage() {
   const [openDialog, setOpenDialog] = useState(false)
   const [selectedId, setSelectedId] = useState<number | null>(null)
   const isMobile = useIsMobile()
-
+  const api = process.env.NEXT_PUBLIC_API
   const pageSize = 10
 
   const fetchClientes = async () => {
     setLoading(true)
     try {
-      const response = await axios.get<{ data: Cliente[] }>(
-        "https://localhost:7195/api/cliente?page=1&pageSize=9999"
-      )
+      const response = await axios.get<{ data: Cliente[] }>(`${api}/cliente?page=1&pageSize=9999`)
       const all = response.data.data || []
       setClientes(all)
       setFilteredClientes(all)
@@ -133,7 +131,7 @@ export default function ClientesPage() {
 
     setIsLoading(true)
     try {
-      await axios.delete(`https://localhost:7195/api/cliente/${selectedId}`)
+      await axios.delete(`${api}/cliente/${selectedId}`)
       await fetchClientes()
       setOpenDialog(false)
     } catch (error) {

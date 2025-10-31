@@ -1,6 +1,7 @@
 ﻿using FortalezaSystem.Domain.Entities;
 using FortalezaSystem.Infrastructure.Context;
 using MediatR;
+using Microsoft.EntityFrameworkCore;
 using ClientesEntity = FortalezaSystem.Domain.Entities.Clientes;
 using ItemPedidoEntity = FortalezaSystem.Domain.Entities.ItemPedido;
 using PedidosEntity = FortalezaSystem.Domain.Entities.Pedidos;
@@ -14,10 +15,8 @@ public class CreateClienteHandler(DataContext context)
 
     public async Task<ClientesEntity> Handle(CreateClienteCommand request, CancellationToken cancellationToken)
     {
-        // Documento
         var documento = new Documento(request.CPF!, request.RG!);
 
-        // Endereços
         var enderecos = request.Enderecos?.Select(e =>
             new Endereco(
                 e.Numero,
@@ -30,7 +29,6 @@ public class CreateClienteHandler(DataContext context)
             )
         ).ToList();
 
-        // Dados Profissionais
         var dadosProfissionais = request.DadosProfissionais is null
             ? null
             : new DadosProfissionais(
@@ -49,7 +47,6 @@ public class CreateClienteHandler(DataContext context)
                 request.DadosProfissionais.Profissao
             );
 
-        // Cônjuge
         var conjuge = request.Conjuge is null
             ? null
             : new Conjuge(
@@ -107,6 +104,8 @@ public class CreateClienteHandler(DataContext context)
                         itemRequest.PrecoUnitario
                     );
 
+                    await AtualizarEstoque(itemRequest.ProdutoId, itemRequest);
+
                     if (informacoesPagamento is not null)
                     {
                         typeof(InformacoesPagamento)
@@ -132,5 +131,20 @@ public class CreateClienteHandler(DataContext context)
         }
 
         return cliente;
+    }
+
+    public async Task AtualizarEstoque(int produtoId, ItemPedidoDto item)
+    {
+        var produto = await _context.Estoque
+            .AsNoTracking()
+            .FirstOrDefaultAsync(e => e.Id == produtoId)
+                ??
+            throw new Exception($"Produto não encontrado.");
+
+        var atualizandoQuantidade = produto.Quantidade - item.Quantidade;
+
+        produto.AtualizarEstoque(atualizandoQuantidade);
+
+        _context.Estoque.Update(produto);
     }
 }

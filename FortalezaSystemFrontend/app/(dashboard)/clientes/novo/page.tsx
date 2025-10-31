@@ -11,6 +11,7 @@ export default function NovoClientePage() {
   const router = useRouter()
   const { toast } = useToast()
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const api = process.env.NEXT_PUBLIC_API
 
   const handleSubmit = async (formData: any) => {
     setIsSubmitting(true)
@@ -86,7 +87,7 @@ export default function NovoClientePage() {
               {
                 itens: formData.estoque.map((produto: any) => ({
                   produtoId: Number.parseInt(produto.id),
-                  quantidade: produto.quantidade,
+                  quantidade: produto.quantidadeSelecionada,
                   precoUnitario: produto.preco,
                   pagamento: formData.pagamento
                     ? {
@@ -108,7 +109,7 @@ export default function NovoClientePage() {
             : [],
       }
 
-      await axios.post("https://localhost:7195/api/cliente", payload, {
+      await axios.post(`${api}/cliente`, payload, {
         headers: { "Content-Type": "application/json" },
       })
 

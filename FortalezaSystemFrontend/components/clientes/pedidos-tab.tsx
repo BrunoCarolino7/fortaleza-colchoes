@@ -56,8 +56,9 @@ interface PedidosTabProps {
 
 export function PedidosTab({ cliente }: PedidosTabProps) {
   const id = cliente.id
+  const api = process.env.NEXT_PUBLIC_API
   const { toast } = useToast()
-  const { data } = useFetch<Pedido[]>(id ? `https://localhost:7195/api/pedido/cliente/${id}` : "", { enabled: !!id })
+  const { data } = useFetch<Pedido[]>(id ? `${api}/pedido/cliente/${id}` : "", { enabled: !!id })
 
   const [selectedPedidoId, setSelectedPedidoId] = useState<string | null>(null)
   const [pedidos, setPedidos] = useState<Pedido[]>([])
@@ -157,8 +158,7 @@ export function PedidosTab({ cliente }: PedidosTabProps) {
     }
 
     try {
-      await axios.put(
-        `https://localhost:7195/api/pedido/status?InformacoesPagamentoId=${informacoesPagamentoId}&ParcelaId=${parcelaNumero}`,
+      await axios.put(`${api}/pedido/status?InformacoesPagamentoId=${informacoesPagamentoId}&ParcelaId=${parcelaNumero}`,
         newStatus,
         { headers: { "Content-Type": "application/json" } },
       )

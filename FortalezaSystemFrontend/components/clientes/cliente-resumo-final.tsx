@@ -278,7 +278,7 @@ export function ClienteResumoFinal({
                       <div className="text-right">
                         <p className="font-medium">{formatToBRL(parcela.valor)}</p>
                         <p className="text-xs text-muted-foreground">
-                          {parcela.statusPagamento === 1 ? "✓ Pago" : "Pendente"}
+                          {parcela.statusPagamento === 1 ? "Pendente" : "✓ Pago"}
                         </p>
                       </div>
                     </div>

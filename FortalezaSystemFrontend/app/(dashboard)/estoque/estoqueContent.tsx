@@ -55,15 +55,13 @@ export default function EstoqueContent() {
   const [searchTerm, setSearchTerm] = useState("")
   const [loading, setLoading] = useState(true)
   const isMobile = useIsMobile()
-
+  const api = process.env.NEXT_PUBLIC_API
   const pageSize = 10
 
   const fetchProdutos = async () => {
     setLoading(true)
     try {
-      const response = await axios.get<EstoqueResponse>(
-        `https://localhost:7195/api/estoque?page=1&pageSize=9999`
-      )
+      const response = await axios.get<EstoqueResponse>(`${api}/estoque?page=1&pageSize=9999`)
       const all = response.data.data || []
       setProdutos(all)
       setFilteredProdutos(all)
@@ -128,7 +126,7 @@ export default function EstoqueContent() {
   }
 
   const handleRemoveItem = (itemId: number) => {
-    axios.delete(`https://localhost:7195/api/estoque/${itemId}`)
+    axios.delete(`${api}estoque/${itemId}`)
     setProdutos(produtos.filter((item) => item.id !== itemId))
     console.log("remove item", itemId)
   }

@@ -10,7 +10,6 @@ export interface ValidationResult {
   errors: ValidationError[]
 }
 
-// Validar endereço
 export function validateEndereco(endereco: Endereco): ValidationError[] {
   const errors: ValidationError[] = []
 
@@ -24,7 +23,6 @@ export function validateEndereco(endereco: Endereco): ValidationError[] {
   return errors
 }
 
-// Validar dados pessoais
 export function validateDadosPessoais(formData: any): ValidationError[] {
   const errors: ValidationError[] = []
 
@@ -42,7 +40,6 @@ export function validateDadosPessoais(formData: any): ValidationError[] {
   return errors
 }
 
-// Validar endereços
 export function validateEnderecos(enderecos: Endereco[]): ValidationError[] {
   const errors: ValidationError[] = []
 
@@ -78,7 +75,6 @@ export function validateDadosProfissionais(dadosProfissionais: DadosProfissionai
   return errors
 }
 
-// Validar cônjuge
 export function validateConjuge(conjuge: Conjuge | undefined): ValidationError[] {
   const errors: ValidationError[] = []
 
@@ -97,7 +93,6 @@ export function validateConjuge(conjuge: Conjuge | undefined): ValidationError[]
   return errors
 }
 
-// Validar pagamento
 export function validatePagamento(
   pagamento: Pagamento | undefined,
   produtosSelecionados: ProdutoSelecionado[],
@@ -122,7 +117,6 @@ export function validatePagamento(
   return errors
 }
 
-// Validação completa
 export function validateClienteForm(
   formData: any,
   enderecos: Endereco[],
@@ -163,7 +157,6 @@ export function validateClienteForm(
   }
 }
 
-// Validação final (todos os passos)
 export function validateClienteFormFinal(
   formData: any,
   enderecos: Endereco[],
