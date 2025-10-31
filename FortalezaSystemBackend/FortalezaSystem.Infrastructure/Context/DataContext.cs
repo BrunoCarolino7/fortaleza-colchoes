@@ -122,6 +122,8 @@ public class DataContext(DbContextOptions<DataContext> options) : DbContext(opti
 
             builder.Property(d => d.Usuario).HasMaxLength(20);
             builder.Property(d => d.SenhaHash).HasMaxLength(50);
+            builder.Property(d => d.Status).HasDefaultValue(true);
+            builder.Property(d => d.StatusCriar).HasDefaultValue(true);
         });
 
         // ================== DOCUMENTO ==================

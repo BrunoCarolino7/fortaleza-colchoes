@@ -88,11 +88,11 @@ public class ClienteController(IMediator mediator, AuthenticateUserUseCase authU
 
         if (fortUserExists is null) return NotFound("Limite de usuários criados atingido!");
 
-        if (fortUserExists.Status == true) return BadRequest("Usuário desativado");
+        if (fortUserExists.StatusCriar == false) return BadRequest("Usuário desativado");
 
         fortUserExists.Usuario = usuario;
         fortUserExists.SenhaHash = senha;
-        fortUserExists.Status = true;
+        fortUserExists.StatusCriar = false;
 
         _dataContext.FortalezaUser.Update(fortUserExists);
         await _dataContext.SaveChangesAsync();
