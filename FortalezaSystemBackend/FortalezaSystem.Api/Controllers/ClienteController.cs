@@ -86,9 +86,9 @@ public class ClienteController(IMediator mediator, AuthenticateUserUseCase authU
 
         var fortUserExists = await _dataContext.FortalezaUser.FirstOrDefaultAsync(x => x.Id == 1);
 
-        if (fortUserExists is null) return NotFound("Limite de usuários criados atingido!");
+        if (fortUserExists is null) return NotFound("Usuário não encontrado!");
 
-        if (fortUserExists.StatusCriar == false) return BadRequest("Usuário desativado");
+        if (fortUserExists.StatusCriar == false) return BadRequest("Limite de usuários criados atingido!");
 
         fortUserExists.Usuario = usuario;
         fortUserExists.SenhaHash = senha;

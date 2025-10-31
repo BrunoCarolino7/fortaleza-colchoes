@@ -14,6 +14,7 @@ public class Estoque : BaseEntity
         Preco = preco;
         Quantidade = quantidade;
         StatusEstoque = statusEstoque;
+        Status = true;
     }
 
     public Estoque(int? id, string? nome, string? categoria, string? tamanho, decimal? preco, int? quantidade, EStatusEstoque? statusEstoque)
