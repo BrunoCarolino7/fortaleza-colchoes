@@ -55,25 +55,25 @@ export default function LoginPage() {
           <div className="space-y-4">
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 backdrop-blur-sm border border-white/20">
               <Sparkles className="w-4 h-4" />
-              <span className="text-sm font-medium">Sistema de Gestão Empresarial</span>
+              <span className="text-sm font-medium">Sistema de Gestão</span>
             </div>
 
             <h1 className="text-5xl font-bold leading-tight tracking-tight">
-              Gerencie seu negócio com <span className="block mt-2 text-white/90">inteligência e eficiência</span>
+              Fortaleza System<span className="block mt-2 text-white/90"></span>
             </h1>
 
             <p className="text-lg text-white/80 leading-relaxed">
-              Controle completo de estoque, clientes, vendas e muito mais em uma plataforma moderna e intuitiva.
+              Controle completo de estoque e clientes.
             </p>
+
           </div>
 
           {/* Feature highlights */}
           <div className="grid grid-cols-2 gap-4 pt-8">
             {[
-              { label: "Gestão de Estoque", value: "Completa" },
-              { label: "Controle de Vendas", value: "Em tempo real" },
-              { label: "Relatórios", value: "Detalhados" },
-              { label: "Suporte", value: "24/7" },
+              { label: "Gestão de Estoque", value: "Eficiente" },
+              { label: "Controle de Clientes", value: "Inteligente" },
+              // { label: "Relatórios", value: "Detalhados" },
             ].map((item, i) => (
               <div key={i} className="space-y-1 p-4 rounded-lg bg-white/5 backdrop-blur-sm border border-white/10">
                 <p className="text-sm text-white/60">{item.label}</p>
@@ -191,9 +191,7 @@ export default function LoginPage() {
                 Não tem uma conta?{" "}
                 <Link
                   href="/register"
-                  className="font-semibold text-primary hover:underline underline-offset-4 transition-colors cursor-pointer inline-block"
-                  onClick={() => console.log("[v0] Navigating to register page")}
-                >
+                  className="font-semibold text-primary hover:underline underline-offset-4 transition-colors cursor-pointer inline-block">
                   Criar conta
                 </Link>
               </p>

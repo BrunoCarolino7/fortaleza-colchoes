@@ -12,8 +12,8 @@ import axios from "axios"
 import Link from "next/link"
 
 export default function RegisterPage() {
-  const [user, setUser] = useState<string>("")
-  const [password, setPassword] = useState<string>("")
+  const [usuario, setUsuario] = useState<string>("")
+  const [senha, setSenha] = useState<string>("")
   const [confirmPassword, setConfirmPassword] = useState<string>("")
   const [error, setError] = useState("")
   const [isLoading, setIsLoading] = useState(false)
@@ -34,40 +34,27 @@ export default function RegisterPage() {
     e.preventDefault()
     setError("")
 
-    if (password !== confirmPassword) {
+    if (senha !== confirmPassword) {
       setError("As senhas não coincidem")
       return
     }
 
-    if (password.length < 4) {
+    if (senha.length < 4) {
       setError("A senha deve ter pelo menos 4 caracteres")
       return
     }
 
-    axios.put(`${api}/cliente/conta`, {
-      User: user,
-      Password: password,
-    }).then((response) => {
-      const data = response.data;
-      if (data.status === 200 || data.success) {
-        router.push("/login")
-      } else {
-        setError(data.error || "Erro ao criar conta")
-      }
-    })
-
     setIsLoading(true)
 
     try {
-      const body = { User: user, Password: password }
-      const response = await axios.post(`${api}/cliente/register`, body)
+      const response = await axios.put(`${api}/cliente/cadastrar?usuario=${usuario}&senha=${senha}`)
+      const data = await response;
 
-      const data = await response.data
-
-      if (data.status === 200 || data.success) {
+      console.log("Response data:", response)
+      if (data.status === 200) {
         router.push("/login?registered=true")
       } else {
-        setError(data.error || "Erro ao criar conta")
+        setError(data.status.toString())
       }
     } catch (error) {
       console.error("Registration error:", error)
@@ -116,8 +103,8 @@ export default function RegisterPage() {
                 id="user"
                 type="text"
                 placeholder="JohnDoe7"
-                value={user}
-                onChange={(e) => setUser(e.target.value)}
+                value={usuario}
+                onChange={(e) => setUsuario(e.target.value)}
                 required
                 disabled={isLoading}
                 className="h-11 rounded-xl border-border/40 bg-background/50 backdrop-blur-sm transition-all duration-300 focus:bg-background focus:shadow-lg focus:shadow-primary/10"
@@ -133,8 +120,8 @@ export default function RegisterPage() {
                   id="password"
                   type={visible ? "text" : "password"}
                   placeholder="••••••••"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  value={senha}
+                  onChange={(e) => setSenha(e.target.value)}
                   required
                   disabled={isLoading}
                   className="h-11 rounded-xl border-border/40 bg-background/50 pr-11 backdrop-blur-sm transition-all duration-300 focus:bg-background focus:shadow-lg focus:shadow-primary/10"
