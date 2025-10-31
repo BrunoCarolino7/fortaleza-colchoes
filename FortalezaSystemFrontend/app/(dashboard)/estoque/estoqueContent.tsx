@@ -110,7 +110,7 @@ export default function EstoqueContent() {
   }
 
   const handleRemoveItem = (itemId: number) => {
-    axios.delete(`${api}estoque/${itemId}`)
+    axios.delete(`${api}/estoque/${itemId}`)
     setProdutos(produtos.filter((item) => item.id !== itemId))
     console.log("remove item", itemId)
   }

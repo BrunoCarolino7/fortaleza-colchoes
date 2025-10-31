@@ -13,13 +13,14 @@ export default function ProdutoDetalhesPage({ params }: { params: Promise<{ id: 
   const [produto, setProduto] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const api = process.env.NEXT_PUBLIC_API
 
   useEffect(() => {
     if (!id) return
 
     const fetchProduto = async () => {
       try {
-        const response = await fetch(`https://localhost:7195/api/estoque/produto/${Number(id)}`)
+        const response = await fetch(`${api}/estoque/produto/${Number(id)}`)
         if (!response.ok) throw new Error(`Erro HTTP: ${response.status}`)
         const result = await response.json()
         const produtoData = result.data ?? result
