@@ -6,21 +6,8 @@ import { Header } from "@/components/header"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Skeleton } from "@/components/ui/skeleton"
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table"
-import {
-  PlusIcon,
-  SearchIcon,
-  EyeIcon,
-  PencilIcon,
-  Trash2Icon,
-} from "@/components/icons"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { PlusIcon, SearchIcon, EyeIcon, PencilIcon, Trash2Icon } from "@/components/icons"
 import {
   AlertDialog,
   AlertDialogContent,
@@ -85,33 +72,33 @@ export default function ClientesPage() {
   }, [])
 
   useEffect(() => {
-    const term = searchTerm.toLowerCase().trim();
+    const term = searchTerm.toLowerCase().trim()
 
     if (!term) {
-      setFilteredClientes(clientes);
-      setTotalPages(Math.max(1, Math.ceil(clientes.length / pageSize)));
-      setCurrentPage(1);
-      return;
+      setFilteredClientes(clientes)
+      setTotalPages(Math.max(1, Math.ceil(clientes.length / pageSize)))
+      setCurrentPage(1)
+      return
     }
 
-    const hasNumbers = /\d/.test(term);
-    const searchNum = term.replace(/\D/g, "");
+    const hasNumbers = /\d/.test(term)
+    const searchNum = term.replace(/\D/g, "")
 
     const filtrados = clientes.filter((c) => {
-      const nome = c.nome?.toLowerCase() ?? "";
-      const cpf = c.documento?.cpf?.replace(/\D/g, "") ?? "";
+      const nome = c.nome?.toLowerCase() ?? ""
+      const cpf = c.documento?.cpf?.replace(/\D/g, "") ?? ""
 
       if (hasNumbers) {
-        return cpf.includes(searchNum);
+        return cpf.includes(searchNum)
       }
 
-      return nome.includes(term);
-    });
+      return nome.includes(term)
+    })
 
-    setFilteredClientes(filtrados);
-    setTotalPages(Math.max(1, Math.ceil(filtrados.length / pageSize)));
-    setCurrentPage(1);
-  }, [searchTerm, clientes]);
+    setFilteredClientes(filtrados)
+    setTotalPages(Math.max(1, Math.ceil(filtrados.length / pageSize)))
+    setCurrentPage(1)
+  }, [searchTerm, clientes])
 
   const handlePrevious = () => {
     if (currentPage > 1) setCurrentPage((prev) => prev - 1)
@@ -141,17 +128,14 @@ export default function ClientesPage() {
     }
   }
 
-  const paginatedClientes = filteredClientes.slice(
-    (currentPage - 1) * pageSize,
-    currentPage * pageSize
-  )
+  const paginatedClientes = filteredClientes.slice((currentPage - 1) * pageSize, currentPage * pageSize)
 
   if (loading) {
     return (
       <div className="flex flex-col">
         <Header title="Clientes" />
-        <div className="flex-1 overflow-auto p-4 sm:p-6">
-          <Skeleton className="h-64 w-full" />
+        <div className="flex-1 overflow-auto">
+          <Skeleton className="h-64 w-full rounded-2xl" />
         </div>
       </div>
     )
@@ -160,89 +144,113 @@ export default function ClientesPage() {
   return (
     <div className="flex flex-col">
       <Header title="Clientes" />
-      <div className="flex-1 overflow-auto p-4 sm:p-6">
-        {/* Header */}
-        <div className="mb-4 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div className="relative w-full sm:w-64">
-            <SearchIcon className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+      <div className="flex-1 overflow-auto">
+        <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="relative w-full sm:w-80">
+            <SearchIcon className="absolute left-3 top-3 h-5 w-5 text-muted-foreground" />
             <Input
-              placeholder="Busque por nome ou CPF "
+              placeholder="Busque por nome ou CPF"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-8"
+              className="pl-10 h-11 rounded-xl border-border/40 bg-card/50 backdrop-blur-sm transition-all duration-300 focus:bg-card focus:shadow-lg focus:shadow-primary/10"
             />
           </div>
 
           <Link href="/clientes/novo" className="w-full sm:w-auto">
-            <Button className="w-full sm:w-auto">
-              <PlusIcon className="mr-2 h-4 w-4" /> Novo Cliente
+            <Button className="group w-full sm:w-auto h-11 rounded-xl bg-gradient-to-r from-primary to-accent shadow-lg shadow-primary/25 transition-all duration-300 hover:scale-105 hover:shadow-xl hover:shadow-primary/30">
+              <PlusIcon className="mr-2 h-5 w-5 transition-transform duration-300 group-hover:rotate-90" />
+              Novo Cliente
             </Button>
           </Link>
         </div>
 
         {/* === MOBILE === */}
         {isMobile ? (
-          <div className="flex flex-col gap-3">
-            {paginatedClientes.map((cliente) => (
+          <div className="flex flex-col gap-4">
+            {paginatedClientes.map((cliente, index) => (
               <div
                 key={cliente.id}
-                className="border border-border rounded-lg p-4 bg-card shadow-sm flex flex-col gap-2"
+                className="group relative overflow-hidden rounded-2xl border border-border/40 bg-card/50 p-5 backdrop-blur-sm shadow-lg transition-all duration-300 hover:scale-[1.02] hover:shadow-xl hover:shadow-primary/10"
+                style={{
+                  animation: `fadeInUp 0.4s ease-out ${index * 0.05}s both`,
+                }}
               >
-                <div className="flex justify-between items-center">
-                  <h2 className="text-base font-semibold">{cliente.nome}</h2>
-                  <div className="flex gap-2">
-                    <Link href={`/clientes/${cliente.id}`}>
-                      <Button variant="ghost" size="icon">
-                        <EyeIcon className="h-4 w-4" />
+                <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-accent/5 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
+
+                <div className="relative flex flex-col gap-3">
+                  <div className="flex items-center justify-between">
+                    <h2 className="font-heading text-lg font-bold text-foreground">{cliente.nome}</h2>
+                    <div className="flex gap-2">
+                      <Link href={`/clientes/${cliente.id}`}>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-9 w-9 rounded-xl hover:bg-primary/10 hover:text-primary"
+                        >
+                          <EyeIcon className="h-4 w-4" />
+                        </Button>
+                      </Link>
+                      <Link href={`/clientes/${cliente.id}/editar`}>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-9 w-9 rounded-xl hover:bg-accent/10 hover:text-accent"
+                        >
+                          <PencilIcon className="h-4 w-4" />
+                        </Button>
+                      </Link>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-9 w-9 rounded-xl hover:bg-destructive/10 hover:text-destructive"
+                        onClick={() => handleConfirmDelete(cliente.id)}
+                      >
+                        <Trash2Icon className="h-4 w-4" />
                       </Button>
-                    </Link>
-                    <Link href={`/clientes/${cliente.id}/editar`}>
-                      <Button variant="ghost" size="icon">
-                        <PencilIcon className="h-4 w-4" />
-                      </Button>
-                    </Link>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleConfirmDelete(cliente.id)}
-                    >
-                      <Trash2Icon className="h-4 w-4 text-red-500" />
-                    </Button>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2 text-sm">
+                    <p className="text-muted-foreground">
+                      <strong className="text-foreground">CPF:</strong> {cliente.documento?.cpf ?? "-"}
+                    </p>
+                    <p className="text-muted-foreground">
+                      <strong className="text-foreground">RG:</strong> {cliente.documento?.rg ?? "-"}
+                    </p>
+                    <p className="text-muted-foreground">
+                      <strong className="text-foreground">Estado Civil:</strong> {cliente.estadoCivil ?? "-"}
+                    </p>
+                    <p className="text-muted-foreground">
+                      <strong className="text-foreground">Cidade:</strong> {cliente.enderecos?.[0]?.cidade ?? "-"}
+                    </p>
                   </div>
                 </div>
-                <p className="text-sm text-muted-foreground">
-                  <strong>CPF:</strong> {cliente.documento?.cpf ?? "-"}
-                </p>
-                <p className="text-sm text-muted-foreground">
-                  <strong>RG:</strong> {cliente.documento?.rg ?? "-"}
-                </p>
-                <p className="text-sm text-muted-foreground">
-                  <strong>Estado Civil:</strong> {cliente.estadoCivil ?? "-"}
-                </p>
-                <p className="text-sm text-muted-foreground">
-                  <strong>Cidade:</strong> {cliente.enderecos?.[0]?.cidade ?? "-"}
-                </p>
               </div>
             ))}
 
             {paginatedClientes.length === 0 && (
-              <div className="text-center text-muted-foreground py-8">
-                Nenhum cliente encontrado
+              <div className="rounded-2xl border border-border/40 bg-card/50 p-12 text-center backdrop-blur-sm">
+                <div className="mx-auto mb-4 h-16 w-16 rounded-2xl bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center">
+                  <SearchIcon className="h-8 w-8 text-muted-foreground" />
+                </div>
+                <p className="font-heading text-lg font-semibold text-foreground">Nenhum cliente encontrado</p>
+                <p className="mt-2 text-sm text-muted-foreground">Tente ajustar sua busca</p>
               </div>
             )}
 
             {/* Paginação MOBILE */}
             {totalPages > 1 && (
-              <div className="flex justify-between items-center p-4 text-sm text-muted-foreground">
+              <div className="flex items-center justify-between rounded-2xl border border-border/40 bg-card/50 p-4 backdrop-blur-sm">
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={handlePrevious}
                   disabled={currentPage === 1}
+                  className="rounded-xl bg-transparent"
                 >
                   Anterior
                 </Button>
-                <span>
+                <span className="text-sm font-medium text-muted-foreground">
                   Página {currentPage} / {totalPages}
                 </span>
                 <Button
@@ -250,6 +258,7 @@ export default function ClientesPage() {
                   size="sm"
                   onClick={handleNext}
                   disabled={currentPage === totalPages}
+                  className="rounded-xl bg-transparent"
                 >
                   Próxima
                 </Button>
@@ -258,31 +267,36 @@ export default function ClientesPage() {
           </div>
         ) : (
           /* === DESKTOP === */
-          <div className="hidden rounded-lg border border-border bg-card md:block">
+          <div className="hidden overflow-hidden rounded-2xl border border-border/40 bg-card/50 backdrop-blur-sm shadow-xl md:block">
             {paginatedClientes.length > 0 ? (
               <>
-                <Table className="table-fixed w-full">
+                <Table className="w-full table-fixed">
                   <TableHeader>
-                    <TableRow>
-                      <TableHead>Nome</TableHead>
-                      <TableHead>Logradouro</TableHead>
-                      <TableHead>Bairro</TableHead>
-                      <TableHead>Cidade</TableHead>
-                      <TableHead>CEP</TableHead>
-                      <TableHead>CPF</TableHead>
-                      <TableHead className="text-right">Ações</TableHead>
+                    <TableRow className="border-b border-border/40 bg-muted/30 hover:bg-muted/50">
+                      <TableHead className="font-heading font-semibold">Nome</TableHead>
+                      <TableHead className="font-heading font-semibold">Logradouro</TableHead>
+                      <TableHead className="font-heading font-semibold">Bairro</TableHead>
+                      <TableHead className="font-heading font-semibold">Cidade</TableHead>
+                      <TableHead className="font-heading font-semibold">CEP</TableHead>
+                      <TableHead className="font-heading font-semibold">CPF</TableHead>
+                      <TableHead className="text-right font-heading font-semibold">Ações</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {paginatedClientes.map((cliente) => (
-                      <TableRow key={cliente.id}>
-                        <TableCell>{cliente.nome}</TableCell>
+                    {paginatedClientes.map((cliente, index) => (
+                      <TableRow
+                        key={cliente.id}
+                        className="group border-b border-border/20 transition-all duration-300 hover:bg-gradient-to-r hover:from-primary/5 hover:to-accent/5"
+                        style={{
+                          animation: `fadeInUp 0.3s ease-out ${index * 0.03}s both`,
+                        }}
+                      >
+                        <TableCell className="font-medium">{cliente.nome}</TableCell>
                         <TableCell>
                           {cliente.enderecos?.[0]?.logradouro
-                            ? `${cliente.enderecos[0].logradouro}${cliente.enderecos[0].numero
-                              ? `, ${cliente.enderecos[0].numero}`
-                              : ""
-                            }`
+                            ? `${cliente.enderecos[0].logradouro}${
+                                cliente.enderecos[0].numero ? `, ${cliente.enderecos[0].numero}` : ""
+                              }`
                             : "-"}
                         </TableCell>
                         <TableCell>{cliente.enderecos?.[0]?.bairro ?? "-"}</TableCell>
@@ -292,21 +306,30 @@ export default function ClientesPage() {
                         <TableCell className="text-right">
                           <div className="flex justify-end gap-2">
                             <Link href={`/clientes/${cliente.id}`}>
-                              <Button variant="ghost" size="icon">
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-9 w-9 rounded-xl hover:bg-primary/10 hover:text-primary"
+                              >
                                 <EyeIcon className="h-4 w-4" />
                               </Button>
                             </Link>
                             <Link href={`/clientes/${cliente.id}/editar`}>
-                              <Button variant="ghost" size="icon">
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-9 w-9 rounded-xl hover:bg-accent/10 hover:text-accent"
+                              >
                                 <PencilIcon className="h-4 w-4" />
                               </Button>
                             </Link>
                             <Button
                               variant="ghost"
                               size="icon"
+                              className="h-9 w-9 rounded-xl hover:bg-destructive/10 hover:text-destructive"
                               onClick={() => handleConfirmDelete(cliente.id)}
                             >
-                              <Trash2Icon className="h-4 w-4 text-red-500" />
+                              <Trash2Icon className="h-4 w-4" />
                             </Button>
                           </div>
                         </TableCell>
@@ -315,10 +338,9 @@ export default function ClientesPage() {
                   </TableBody>
                 </Table>
 
-                <div className="flex justify-between items-center p-4 border-t text-sm text-muted-foreground">
-                  <span>
-                    Página {currentPage} de {totalPages} — {filteredClientes.length}{" "}
-                    clientes encontrados
+                <div className="flex items-center justify-between border-t border-border/40 bg-muted/20 p-4 backdrop-blur-sm">
+                  <span className="text-sm font-medium text-muted-foreground">
+                    Página {currentPage} de {totalPages} — {filteredClientes.length} clientes encontrados
                   </span>
                   <div className="flex gap-2">
                     <Button
@@ -326,6 +348,7 @@ export default function ClientesPage() {
                       size="sm"
                       onClick={handlePrevious}
                       disabled={currentPage === 1}
+                      className="rounded-xl bg-transparent"
                     >
                       Anterior
                     </Button>
@@ -334,6 +357,7 @@ export default function ClientesPage() {
                       size="sm"
                       onClick={handleNext}
                       disabled={currentPage === totalPages}
+                      className="rounded-xl bg-transparent"
                     >
                       Próxima
                     </Button>
@@ -341,18 +365,14 @@ export default function ClientesPage() {
                 </div>
               </>
             ) : (
-              <div className="text-center py-20 text-muted-foreground">
-                <img
-                  src="https://cdn-icons-png.flaticon.com/512/748/748122.png"
-                  alt="Sem clientes"
-                  className="w-20 h-20 mx-auto mb-3 opacity-70"
-                />
-                <p className="text-sm font-medium mb-1">Nenhum cliente encontrado</p>
-                <p className="text-xs mb-4">
-                  Cadastre um cliente para começar a gerenciar.
-                </p>
+              <div className="py-20 text-center">
+                <div className="mx-auto mb-6 h-20 w-20 rounded-2xl bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center">
+                  <SearchIcon className="h-10 w-10 text-muted-foreground" />
+                </div>
+                <p className="font-heading text-xl font-bold text-foreground mb-2">Nenhum cliente encontrado</p>
+                <p className="mb-6 text-sm text-muted-foreground">Cadastre um cliente para começar a gerenciar.</p>
                 <Link href="/clientes/novo">
-                  <Button size="sm">
+                  <Button className="rounded-xl bg-gradient-to-r from-primary to-accent shadow-lg shadow-primary/25">
                     <PlusIcon className="mr-2 h-4 w-4" /> Adicionar Cliente
                   </Button>
                 </Link>
@@ -362,27 +382,42 @@ export default function ClientesPage() {
         )}
       </div>
 
-      {/* MODAL CONFIRMAR EXCLUSÃO */}
       <AlertDialog open={openDialog} onOpenChange={setOpenDialog}>
-        <AlertDialogContent>
+        <AlertDialogContent className="rounded-2xl border-border/40 bg-card/95 backdrop-blur-xl">
           <AlertDialogHeader>
-            <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
-            <AlertDialogDescription>
+            <AlertDialogTitle className="font-heading text-xl">Confirmar exclusão</AlertDialogTitle>
+            <AlertDialogDescription className="text-muted-foreground">
               Tem certeza que deseja excluir{" "}
-              <strong>
+              <strong className="text-foreground">
                 {clientes.find((c) => c.id === selectedId)?.nome ?? "este cliente"}
               </strong>
               ? Essa ação não pode ser desfeita.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete} className="bg-red-600 hover:bg-red-700 text-white">
+            <AlertDialogCancel className="rounded-xl">Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDelete}
+              className="rounded-xl bg-gradient-to-r from-destructive to-red-600 text-white shadow-lg shadow-destructive/25 hover:shadow-xl"
+            >
               {isLoading ? "Excluindo..." : "Excluir"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <style jsx>{`
+        @keyframes fadeInUp {
+          from {
+            opacity: 0;
+            transform: translateY(20px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+      `}</style>
     </div>
   )
 }

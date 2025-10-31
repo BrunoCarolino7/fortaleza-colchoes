@@ -77,7 +77,9 @@ export default function ProdutoDetalhesPage({ params }: { params: Promise<{ id: 
     return (
       <div>
         <Header title="Erro" />
-        <div className="p-6 text-destructive">{error}</div>
+        <div className="rounded-2xl border border-border/40 bg-card/50 p-12 text-center backdrop-blur-sm">
+          <p className="text-destructive">{error}</p>
+        </div>
       </div>
     )
   }
@@ -86,8 +88,8 @@ export default function ProdutoDetalhesPage({ params }: { params: Promise<{ id: 
     return (
       <div>
         <Header title="Produto não encontrado" />
-        <div className="p-6 text-muted-foreground">
-          <p>Produto não encontrado.</p>
+        <div className="rounded-2xl border border-border/40 bg-card/50 p-12 text-center backdrop-blur-sm">
+          <p className="text-muted-foreground">Produto não encontrado.</p>
         </div>
       </div>
     )
@@ -96,51 +98,51 @@ export default function ProdutoDetalhesPage({ params }: { params: Promise<{ id: 
   return (
     <div>
       <Header title="Detalhes do Produto" />
-      <div className="p-6">
-        <div className="mb-4 flex items-center gap-2">
+      <div className="space-y-6">
+        <div className="flex items-center gap-3">
           <Link href="/estoque">
-            <Button variant="ghost" size="icon">
-              <ArrowLeftIcon className="h-4 w-4" />
+            <Button variant="ghost" size="icon" className="h-11 w-11 rounded-xl hover:bg-accent/10">
+              <ArrowLeftIcon className="h-5 w-5" />
             </Button>
           </Link>
           <Link href={`/estoque/${id}/editar`}>
-            <Button>
-              <PencilIcon className="mr-2 h-4 w-4" />
+            <Button className="group h-11 rounded-xl bg-gradient-to-r from-primary to-accent shadow-lg shadow-primary/25 transition-all duration-300 hover:scale-105 hover:shadow-xl">
+              <PencilIcon className="mr-2 h-5 w-5 transition-transform duration-300 group-hover:rotate-12" />
               Editar
             </Button>
           </Link>
         </div>
 
-        <Card>
-          <CardHeader>
+        <Card className="overflow-hidden rounded-2xl border-border/40 bg-card/50 backdrop-blur-sm shadow-xl">
+          <CardHeader className="border-b border-border/40 bg-gradient-to-r from-primary/5 to-accent/5">
             <div className="flex items-start justify-between">
-              <CardTitle>{produto.nome}</CardTitle>
+              <CardTitle className="font-heading text-2xl">{produto.nome}</CardTitle>
               {getEstoqueStatus(produto)}
             </div>
           </CardHeader>
 
-          <CardContent className="space-y-4">
-            <div className="grid gap-4 md:grid-cols-2">
-              <div>
+          <CardContent className="space-y-4 p-6">
+            <div className="grid gap-6 md:grid-cols-2">
+              <div className="space-y-2">
                 <p className="text-sm font-medium text-muted-foreground">Categoria</p>
-                <p className="text-sm">{produto.categoria}</p>
+                <p className="font-heading text-lg font-semibold text-foreground">{produto.categoria}</p>
               </div>
-              <div>
+              <div className="space-y-2">
                 <p className="text-sm font-medium text-muted-foreground">Tamanho</p>
-                <p className="text-sm">{produto.tamanho}</p>
+                <p className="font-heading text-lg font-semibold text-foreground">{produto.tamanho}</p>
               </div>
-              <div>
+              <div className="space-y-2">
                 <p className="text-sm font-medium text-muted-foreground">Preço</p>
-                <p className="text-sm">
+                <p className="font-heading text-2xl font-bold text-gradient">
                   {produto.preco?.toLocaleString("pt-BR", {
                     style: "currency",
                     currency: "BRL",
                   })}
                 </p>
               </div>
-              <div>
+              <div className="space-y-2">
                 <p className="text-sm font-medium text-muted-foreground">Quantidade em Estoque</p>
-                <p className="text-sm">{produto.quantidade} unidades</p>
+                <p className="font-heading text-2xl font-bold text-foreground">{produto.quantidade} unidades</p>
               </div>
             </div>
           </CardContent>

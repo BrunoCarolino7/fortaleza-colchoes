@@ -20,10 +20,12 @@ export default function NovoProdutoPage() {
   }
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex h-full flex-col">
       <Header title="Novo Produto" />
-      <div className="flex-1 overflow-auto p-4 sm:p-6">
-        <ProdutoForm onSubmit={handleSubmit} />
+      <div className="flex-1 overflow-auto">
+        <div className="rounded-2xl border border-border/40 bg-card/50 p-6 backdrop-blur-sm shadow-xl">
+          <ProdutoForm onSubmit={handleSubmit} />
+        </div>
       </div>
     </div>
   )

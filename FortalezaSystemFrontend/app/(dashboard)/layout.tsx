@@ -23,7 +23,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   if (!isAuthenticated) return null
 
   return (
-    <div className="flex h-screen overflow-hidden bg-background">
+    <div className="relative flex h-screen overflow-hidden">
+      {/* Animated gradient background */}
+      <div className="fixed inset-0 -z-10 bg-background">
+        <div className="absolute inset-0 gradient-mesh opacity-20 animate-pulse" style={{ animationDuration: "8s" }} />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_120%,rgba(120,119,198,0.1),rgba(255,255,255,0))]" />
+      </div>
+
       <aside className="hidden lg:block">
         <Sidebar />
       </aside>
@@ -31,7 +37,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       <MobileNav open={open} onOpenChange={setOpen} />
 
       <div className="flex flex-1 flex-col overflow-auto scrollbar-thin">
-        {children}
+        <div className="flex-1 p-6 lg:p-8">{children}</div>
       </div>
     </div>
   )

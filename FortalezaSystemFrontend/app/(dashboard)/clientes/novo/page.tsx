@@ -54,58 +54,58 @@ export default function NovoClientePage() {
 
         dadosProfissionais: formData.dadosProfissionais
           ? {
-            empresa: formData.dadosProfissionais.empresa,
-            telefone: formData.dadosProfissionais.telefone,
-            salario: formData.dadosProfissionais.salario,
-            profissao: formData.dadosProfissionais.profissao,
-            enderecoEmpresa: {
-              numero: formData.dadosProfissionais.enderecoEmpresa?.numero,
-              logradouro: formData.dadosProfissionais.enderecoEmpresa?.logradouro,
-              bairro: formData.dadosProfissionais.enderecoEmpresa?.bairro,
-              cep: formData.dadosProfissionais.enderecoEmpresa?.cep,
-              localizacao: formData.dadosProfissionais.enderecoEmpresa?.localizacao,
-              cidade: formData.dadosProfissionais.enderecoEmpresa?.cidade,
-              estado: formData.dadosProfissionais.enderecoEmpresa?.estado,
-            },
-          }
+              empresa: formData.dadosProfissionais.empresa,
+              telefone: formData.dadosProfissionais.telefone,
+              salario: formData.dadosProfissionais.salario,
+              profissao: formData.dadosProfissionais.profissao,
+              enderecoEmpresa: {
+                numero: formData.dadosProfissionais.enderecoEmpresa?.numero,
+                logradouro: formData.dadosProfissionais.enderecoEmpresa?.logradouro,
+                bairro: formData.dadosProfissionais.enderecoEmpresa?.bairro,
+                cep: formData.dadosProfissionais.enderecoEmpresa?.cep,
+                localizacao: formData.dadosProfissionais.enderecoEmpresa?.localizacao,
+                cidade: formData.dadosProfissionais.enderecoEmpresa?.cidade,
+                estado: formData.dadosProfissionais.enderecoEmpresa?.estado,
+              },
+            }
           : null,
 
         conjuge: formData.conjuge
           ? {
-            nome: formData.conjuge.nome,
-            dataNascimento: toDateOnly(formData.conjuge.dataNascimento),
-            naturalidade: formData.conjuge.naturalidade,
-            localDeTrabalho: formData.conjuge.localDeTrabalho,
-            cpf: formData.conjuge.cpf,
-            rg: formData.conjuge.rg,
-          }
+              nome: formData.conjuge.nome,
+              dataNascimento: toDateOnly(formData.conjuge.dataNascimento),
+              naturalidade: formData.conjuge.naturalidade,
+              localDeTrabalho: formData.conjuge.localDeTrabalho,
+              cpf: formData.conjuge.cpf,
+              rg: formData.conjuge.rg,
+            }
           : null,
 
         pedidos:
           formData.estoque && formData.estoque.length > 0
             ? [
-              {
-                itens: formData.estoque.map((produto: any) => ({
-                  produtoId: Number.parseInt(produto.id),
-                  quantidade: produto.quantidadeSelecionada,
-                  precoUnitario: produto.preco,
-                  pagamento: formData.pagamento
-                    ? {
-                      valorTotal: formData.pagamento.valorTotal,
-                      sinal: formData.pagamento.sinal,
-                      dataInicio: toDateTime(formData.pagamento.dataInicio),
-                      numeroParcelas: formData.pagamento.numeroParcelas,
-                      parcelas: formData.pagamento.parcelas?.map((p: any) => ({
-                        numero: p.numero,
-                        valor: p.valor,
-                        vencimento: toDateTime(p.vencimento),
-                        statusPagamento: p.statusPagamento,
-                      })),
-                    }
-                    : null,
-                })),
-              },
-            ]
+                {
+                  itens: formData.estoque.map((produto: any) => ({
+                    produtoId: Number.parseInt(produto.id),
+                    quantidade: produto.quantidadeSelecionada,
+                    precoUnitario: produto.preco,
+                    pagamento: formData.pagamento
+                      ? {
+                          valorTotal: formData.pagamento.valorTotal,
+                          sinal: formData.pagamento.sinal,
+                          dataInicio: toDateTime(formData.pagamento.dataInicio),
+                          numeroParcelas: formData.pagamento.numeroParcelas,
+                          parcelas: formData.pagamento.parcelas?.map((p: any) => ({
+                            numero: p.numero,
+                            valor: p.valor,
+                            vencimento: toDateTime(p.vencimento),
+                            statusPagamento: p.statusPagamento,
+                          })),
+                        }
+                      : null,
+                  })),
+                },
+              ]
             : [],
       }
 
@@ -126,8 +126,10 @@ export default function NovoClientePage() {
   return (
     <div className="flex flex-col">
       <Header title="Novo Cliente" />
-      <div className="flex-1 overflow-auto p-4 sm:p-6">
-        <ClienteFormStepper onSubmit={handleSubmit} isSubmitting={isSubmitting} />
+      <div className="flex-1 overflow-auto">
+        <div className="rounded-2xl border border-border/40 bg-card/50 p-6 backdrop-blur-sm shadow-xl">
+          <ClienteFormStepper onSubmit={handleSubmit} isSubmitting={isSubmitting} />
+        </div>
       </div>
     </div>
   )

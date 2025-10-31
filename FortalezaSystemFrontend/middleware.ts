@@ -5,8 +5,7 @@ export function middleware(request: NextRequest) {
   const authToken = request.cookies.get("auth_token")
   const { pathname } = request.nextUrl
 
-  // Allow access to login page
-  if (pathname === "/login") {
+  if (pathname === "/login" || pathname === "/register") {
     // If already authenticated, redirect to dashboard
     if (authToken) {
       return NextResponse.redirect(new URL("/dashboard", request.url))
