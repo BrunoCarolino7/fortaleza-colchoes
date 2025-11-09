@@ -158,20 +158,12 @@ export default function EstoquePage() {
                     <h2 className="font-heading text-lg font-bold text-foreground">{produto.nome}</h2>
                     <div className="flex gap-2">
                       <Link href={`/estoque/${produto.id}`}>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-9 w-9 rounded-xl hover:bg-primary/10 hover:text-primary"
-                        >
+                        <Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl hover:bg-primary/10 hover:text-primary">
                           <EyeIcon className="h-4 w-4" />
                         </Button>
                       </Link>
                       <Link href={`/estoque/${produto.id}/editar`}>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-9 w-9 rounded-xl hover:bg-accent/10 hover:text-accent"
-                        >
+                        <Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl hover:bg-accent/10 hover:text-accent">
                           <PencilIcon className="h-4 w-4" />
                         </Button>
                       </Link>
@@ -220,34 +212,91 @@ export default function EstoquePage() {
                 <p className="mt-2 text-sm text-muted-foreground">Tente ajustar sua busca</p>
               </div>
             )}
+          </div>
+        ) : (
+          <div className="rounded-2xl border border-border/40 bg-card/50 backdrop-blur-sm overflow-hidden shadow-lg">
+            <table className="w-full text-sm">
+              <thead className="bg-muted/40">
+                <tr>
+                  <th className="p-4 text-left">Nome</th>
+                  <th className="p-4 text-left">Categoria</th>
+                  <th className="p-4 text-left">Tamanho</th>
+                  <th className="p-4 text-left">Preço</th>
+                  <th className="p-4 text-left">Quantidade</th>
+                  <th className="p-4 text-left">Status</th>
+                  <th className="p-4 text-right">Ações</th>
+                </tr>
+              </thead>
+              <tbody>
+                {paginatedProdutos.map((produto) => (
+                  <tr key={produto.id} className="border-t hover:bg-muted/20 transition-colors">
+                    <td className="p-4 font-medium">{produto.nome}</td>
+                    <td className="p-4">{produto.categoria}</td>
+                    <td className="p-4">{produto.tamanho}</td>
+                    <td className="p-4">
+                      {produto.preco.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
+                    </td>
+                    <td className="p-4">{produto.quantidade}</td>
+                    <td className="p-4">{getEstoqueStatus(produto.statusEstoque)}</td>
+                    <td className="p-4 text-right">
+                      <div className="flex justify-end gap-2">
+                        <Link href={`/estoque/${produto.id}`}>
+                          <Button variant="ghost" size="icon" className="hover:text-primary">
+                            <EyeIcon className="h-4 w-4" />
+                          </Button>
+                        </Link>
+                        <Link href={`/estoque/${produto.id}/editar`}>
+                          <Button variant="ghost" size="icon" className="hover:text-accent">
+                            <PencilIcon className="h-4 w-4" />
+                          </Button>
+                        </Link>
+                        <Button variant="ghost" size="icon" className="hover:text-destructive" onClick={() => handleRemoveItem(produto.id)}>
+                          <Trash2Icon className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
 
-            {totalPages > 1 && (
-              <div className="flex items-center justify-between rounded-2xl border border-border/40 bg-card/50 p-4 backdrop-blur-sm">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handlePrevious}
-                  disabled={currentPage === 1}
-                  className="rounded-xl bg-transparent"
-                >
-                  Anterior
-                </Button>
-                <span className="text-sm font-medium text-muted-foreground">
-                  Página {currentPage} / {totalPages}
-                </span>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleNext}
-                  disabled={currentPage === totalPages}
-                  className="rounded-xl bg-transparent"
-                >
-                  Próxima
-                </Button>
+            {paginatedProdutos.length === 0 && (
+              <div className="p-12 text-center">
+                <div className="mx-auto mb-4 h-16 w-16 rounded-2xl bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center">
+                  <SearchIcon className="h-8 w-8 text-muted-foreground" />
+                </div>
+                <p className="font-heading text-lg font-semibold text-foreground">Nenhum produto encontrado</p>
+                <p className="mt-2 text-sm text-muted-foreground">Tente ajustar sua busca</p>
               </div>
             )}
           </div>
-        ) : null}
+        )}
+
+        {totalPages > 1 && (
+          <div className="mt-6 flex items-center justify-between rounded-2xl border border-border/40 bg-card/50 p-4 backdrop-blur-sm">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handlePrevious}
+              disabled={currentPage === 1}
+              className="rounded-xl bg-transparent"
+            >
+              Anterior
+            </Button>
+            <span className="text-sm font-medium text-muted-foreground">
+              Página {currentPage} / {totalPages}
+            </span>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleNext}
+              disabled={currentPage === totalPages}
+              className="rounded-xl bg-transparent"
+            >
+              Próxima
+            </Button>
+          </div>
+        )}
       </div>
 
       <style jsx>{`
